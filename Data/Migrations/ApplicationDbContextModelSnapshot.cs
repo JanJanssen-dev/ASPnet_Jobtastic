@@ -62,6 +62,10 @@ namespace ASPnet_Jobtastic.Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("OwnerUsername")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("Salary")
                         .HasColumnType("int");
 

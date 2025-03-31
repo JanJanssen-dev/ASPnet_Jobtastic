@@ -13,26 +13,31 @@
         <div class="card-header"><h4>Inserat anlegen oder bearbeiten</h4></div>
         <div class="card-body">
             <div class="row">
-                <div class="col"><input class="form-control" asp-for="JobTitle" placeholder="Jobtitel" /></div>
-                <div class="col"><input class="form-control" asp-for="JobLocation" placeholder="Ort" /></div>
-                <div class="col"><input class="form-control" asp-for="StartDate" placeholder="Start Datum" /></div>
+                <div class="col"><input type="text" class="form-control" asp-for="JobTitle" placeholder="Jobtitel" /></div>
+                <div class="col"><input type="text" class="form-control" asp-for="JobLocation" placeholder="Ort" /></div>
+                <div class="col"><input type="date" class="form-control" asp-for="StartDate" placeholder="Start Datum" /></div>
             </div>
 
             <div class="row">
-                <div class="col"><input class="form-control" asp-for="CompanyName" placeholder="Firmenname" /></div>
-                <div class="col"><input class="form-control" asp-for="ContactName" placeholder="ASP-Name" /></div>
-                <div class="col"><input class="form-control" asp-for="ContactEmail" placeholder="ASP-Mail" /></div>
-                <div class="col"><input class="form-control" asp-for="Salary" placeholder="Gehalt" /></div>
+                <div class="col"><input type="text" class="form-control" asp-for="CompanyName" placeholder="Firmenname" /></div>
+                <div class="col"><input type="text" class="form-control" asp-for="ContactName" placeholder="ASP-Name" /></div>
+                <div class="col"><input type="email" class="form-control" asp-for="ContactEmail" placeholder="ASP-Mail" /></div>
+                <div class="col"><input type="number" class="form-control" asp-for="Salary" placeholder="Gehalt" /></div>
             </div>
 
             <div class="row">
-                <div class="col"><input class="form-control" asp-for="CompanyWebsite" placeholder="Homepage" /></div>
-                <div class="col"><input class="form-control" asp-for="CompanyImage" placeholder="Bild-Url" /></div>
+                <div class="col"><input type="url" class="form-control" asp-for="CompanyWebsite" placeholder="Homepage" /></div>
+                    
+                
             </div>
 
             <div class="row">
                 <label>JobDescription</label>
                 <div class="col"><textarea class="form-control" asp-for="JobDescription" placeholder="Jobbeschreibung"></textarea></div>
+            </div>
+            <div class="row">
+                    <label>Firmen Logo</label>
+                    <div class="col"><input type="file" asp-for="CompanyImage" class="form-control" id="CompanyImage" name="file" /></div>
             </div>
         </div>
         <div class="card-footer">

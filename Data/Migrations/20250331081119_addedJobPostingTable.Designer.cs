@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ASPnet_Jobtastic.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250327092959_addedJobPostingTable")]
+    [Migration("20250331081119_addedJobPostingTable")]
     partial class addedJobPostingTable
     {
         /// <inheritdoc />
@@ -62,6 +62,10 @@ namespace ASPnet_Jobtastic.Data.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("JobTitle")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("OwnerUsername")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 

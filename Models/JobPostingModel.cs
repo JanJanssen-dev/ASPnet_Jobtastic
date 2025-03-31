@@ -13,5 +13,6 @@
         public string ContactEmail { get; set; } = string.Empty;
         public string CompanyWebsite { get; set; } = string.Empty;
         public byte[] CompanyImage { get; set; } = Array.Empty<byte>();
+        public string OwnerUsername { get; set; } = string.Empty;
     }
 }
