@@ -26,7 +26,7 @@ namespace ASPnet_Jobtastic.Areas.Identity.Pages.Account
         public async Task<IActionResult> OnPost(string returnUrl = null)
         {
             await _signInManager.SignOutAsync();
-            _logger.LogInformation("User logged out.");
+            _logger.LogInformation("User: \u001b[34m{UserName}\u001b[0m logged out.", User.Identity.Name);
             if (returnUrl != null)
             {
                 return LocalRedirect(returnUrl);

@@ -60,13 +60,16 @@ namespace ASPnet_Jobtastic.Areas.Identity.Pages.Account
         /// </summary>
         public class InputModel
         {
+            [Required]
+            [DataType(DataType.Text)]
+            public string UserName { get; set; }
             /// <summary>
             ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
             ///     directly from your code. This API may change or be removed in future releases.
             /// </summary>
-            [Required]
-            [EmailAddress]
-            public string Email { get; set; }
+            //[Required]
+            //[EmailAddress]
+            //public string Email { get; set; }
 
             /// <summary>
             ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
@@ -111,11 +114,12 @@ namespace ASPnet_Jobtastic.Areas.Identity.Pages.Account
             {
                 // This doesn't count login failures towards account lockout
                 // To enable password failures to trigger account lockout, set lockoutOnFailure: true
-                var result = await _signInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
+                var result = await _signInManager.PasswordSignInAsync(Input.UserName, Input.Password, Input.RememberMe, lockoutOnFailure: false);
                 if (result.Succeeded)
                 {
-                    _logger.LogInformation("User logged in.");
-                    return LocalRedirect(returnUrl);
+                    _logger.LogInformation("User: \u001b[34m{UserName}\u001b[0m logged in.", User.Identity.Name);
+                    // Setzen der neuen Url nach Login old:return LocalRedirect(returnUrl);
+                    return RedirectToAction("Index", "JobPosting");
                 }
                 if (result.RequiresTwoFactor)
                 {
@@ -123,7 +127,7 @@ namespace ASPnet_Jobtastic.Areas.Identity.Pages.Account
                 }
                 if (result.IsLockedOut)
                 {
-                    _logger.LogWarning("User account locked out.");
+                    _logger.LogWarning("User: {UserName} account locked out.", User.Identity.Name);
                     return RedirectToPage("./Lockout");
                 }
                 else
