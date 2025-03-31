@@ -6,9 +6,6 @@
 @if (SignInManager.IsSignedIn(User))
 {
     <li class="nav-item">
-            <a class="nav-link text-dark" asp-controller="JobPosting" asp-action="Index">Deine Inserate</a>
-    </li>
-    <li class="nav-item">
         <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">Moin @UserManager.GetUserName(User)!</a>
     </li>
     <li class="nav-item">
@@ -23,7 +20,7 @@ else
         <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Register">Registieren</a>
     </li> *@
     <li class="nav-item">
-        <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Login">neues Inserat anlegen</a>
+        <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Login">Job inserieren</a>
     </li>
 }
 </ul>
