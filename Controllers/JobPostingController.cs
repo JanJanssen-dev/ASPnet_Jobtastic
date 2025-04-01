@@ -36,15 +36,15 @@ namespace ASPnet_Jobtastic.Controllers
         // POST: Neues JobPosting speichern
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult CreateJob(JobPostingModel jobPostingModel, IFormFile file)
+        public IActionResult CreateJob(JobPostingModel jobPostingModel, IFormFile CompanyImage)
         {
             jobPostingModel.OwnerUsername = User.Identity.Name;
 
-            if (file != null && file.Length > 0)
+            if (CompanyImage != null && CompanyImage.Length > 0)
             {
                 using (var ms = new MemoryStream())
                 {
-                    file.CopyTo(ms);
+                    CompanyImage.CopyTo(ms);
                     jobPostingModel.CompanyImage = ms.ToArray();
                 }
             }
@@ -96,7 +96,7 @@ namespace ASPnet_Jobtastic.Controllers
         // POST: Bearbeitetes JobPosting speichern
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult EditJob(int id, JobPostingModel jobPostingModel, IFormFile file)
+        public IActionResult EditJob(int id, JobPostingModel jobPostingModel, IFormFile CompanyImage)
         {
             if (id != jobPostingModel.Id)
                 return BadRequest();
@@ -108,12 +108,12 @@ namespace ASPnet_Jobtastic.Controllers
             jobPostingModel.OwnerUsername = existingJob.OwnerUsername;
 
             // Bildverarbeitung
-            if (file != null && file.Length > 0)
+            if (CompanyImage != null && CompanyImage.Length > 0)
             {
                 // Neues Bild wurde hochgeladen
                 using (var ms = new MemoryStream())
                 {
-                    file.CopyTo(ms);
+                    CompanyImage.CopyTo(ms);
                     jobPostingModel.CompanyImage = ms.ToArray();
                 }
             }
@@ -121,6 +121,8 @@ namespace ASPnet_Jobtastic.Controllers
             {
                 // Altes Bild weiterverwenden
                 jobPostingModel.CompanyImage = existingJob.CompanyImage;
+                // Entferne die Validierungsfehlermeldung für CompanyImage, da das vorhandene Bild verwendet wird
+                ModelState.Remove("CompanyImage");
             }
             else
             {
@@ -186,6 +188,7 @@ namespace ASPnet_Jobtastic.Controllers
                 }
             }
         }
+
     }
 }
 
