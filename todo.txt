@@ -3,3 +3,7 @@
 testen ob username richtig implementiert wird, vorallem beim anlegen neuer user
 
 im account management username änderungen ermöglichen.
+
+secu stuff machen das man per url nicht zwischen den ids der postings switchen kann.
+
+schauen ob ein andere user nicht fremde postings sieht
