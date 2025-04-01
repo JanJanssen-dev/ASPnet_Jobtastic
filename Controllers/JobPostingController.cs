@@ -56,6 +56,7 @@ namespace ASPnet_Jobtastic.Controllers
                 if (System.IO.File.Exists(defaultPath))
                 {
                     jobPostingModel.CompanyImage = System.IO.File.ReadAllBytes(defaultPath);
+                    ModelState.Remove("CompanyImage");
                 }
                 else
                 {
