@@ -1,4 +1,5 @@
 ﻿@model List<JobPostingModel>
+
 @{
     ViewData["Title"] = "Deine Inserate";
 }
@@ -8,7 +9,7 @@
     </div>
 
     <div class="text-end">
-    <a class="mt-3 btn btn-outline-primary" asp-controller="JobPosting" asp-action="CreatedEditJobPosting">neuen Job anlegen</a>
+        <a class="mt-3 btn btn-outline-primary" asp-controller="JobPosting" asp-action="CreateJob">neuen Job anlegen</a>
     </div>
 
     <section class="mt-3 p-4 bg-light rounded shadow-sm">
@@ -46,7 +47,7 @@
         </table>
 </section>
     <div class="text-end">
-        <a class="mt-3 btn btn-outline-primary" asp-controller="JobPosting" asp-action="CreatedEditJobPosting">neuen Job anlegen</a>
+        <a class="mt-3 btn btn-outline-primary" asp-controller="JobPosting" asp-action="CreateJob">neuen Job anlegen</a>
     </div>
 </section>
 

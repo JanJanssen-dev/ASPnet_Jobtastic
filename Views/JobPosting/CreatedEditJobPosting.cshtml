@@ -1,54 +1,92 @@
-﻿@model JobPostingModel
+﻿@Html.ValidationSummary(true, "", new { @class = "text-danger" })
+@model JobPostingModel
 @{
-    ViewData["Title"] = "Deine Inserate!";
-    
+    ViewData["Title"] = Model.Id != 0 ? "Job bearbeiten" : "Neuen Job anlegen";
 }
 
 <section class="p-6 bg-light rounded shadow-sm">
     <div class="mt-2 p-2 bg-primary text-white rounded text-center">
-        <h2>Formular zum Eintragen</h2>
+        <h2>@ViewData["Title"]</h2>
     </div>
- <form asp-controller="JobPosting" asp-action="CreateJob" enctype="multipart/form-data">
-    <div class="card">
-        <div class="card-header"><h4>Inserat anlegen oder bearbeiten</h4></div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col"><input type="text" class="form-control" asp-for="JobTitle" placeholder="Jobtitel" /></div>
-                <div class="col"><input type="text" class="form-control" asp-for="JobLocation" placeholder="Ort" /></div>
-                <div class="col"><input type="date" class="form-control" asp-for="StartDate" placeholder="Start Datum" /></div>
-            </div>
 
-            <div class="row">
-                <div class="col"><input type="text" class="form-control" asp-for="CompanyName" placeholder="Firmenname" /></div>
-                <div class="col"><input type="text" class="form-control" asp-for="ContactName" placeholder="ASP-Name" /></div>
-                <div class="col"><input type="email" class="form-control" asp-for="ContactEmail" placeholder="ASP-Mail" /></div>
-                <div class="col"><input type="number" class="form-control" asp-for="Salary" placeholder="Gehalt" /></div>
-            </div>
+    <form asp-controller="JobPosting" asp-action="@(Model.Id != 0 ? "EditJob" : "CreateJob")" enctype="multipart/form-data">
+        @Html.AntiForgeryToken()
+        @if (Model.Id != 0)
+        {
+            <input type="hidden" asp-for="Id" />
+        }
+        <div class="card">
+            <div class="card-header"><h4>Inserat anlegen oder bearbeiten</h4></div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col mb-4">
+                        <input type="text" class="form-control" asp-for="JobTitle" placeholder="Jobtitel" />
+                        <span asp-validation-for="JobTitle" class="text-danger"></span>
+                    </div>
 
-            <div class="row">
-                <div class="col"><input type="url" class="form-control" asp-for="CompanyWebsite" placeholder="Homepage" /></div>
-                    
-                
-            </div>
+                    <div class="col mb-4">
+                        <input type="JobLocation" class="form-control" asp-for="JobLocation" placeholder="Ort" />
+                        <span asp-validation-for="JobLocation" class="text-danger"></span>
+                    </div>
 
-            <div class="row">
-                <label>JobDescription</label>
-                <div class="col"><textarea class="form-control" asp-for="JobDescription" placeholder="Jobbeschreibung"></textarea></div>
-            </div>
-            <div class="row">
+                    <div class="col mb-4"><input type="date" class="form-control" asp-for="StartDate" placeholder="Start Datum" />
+                        <span asp-validation-for="StartDate" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col mb-4"><input type="text" class="form-control" asp-for="CompanyName" placeholder="Firmenname" />
+                        <span asp-validation-for="CompanyName" class="text-danger"></span>
+                    </div>
+
+                    <div class="col mb-4"><input type="text" class="form-control" asp-for="ContactName" placeholder="ASP-Name" />
+                        <span asp-validation-for="ContactName" class="text-danger"></span>
+                    </div>
+
+                    <div class="col mb-4"><input type="email" class="form-control" asp-for="ContactEmail" placeholder="ASP-Mail" />
+                        <span asp-validation-for="ContactEmail" class="text-danger"></span>
+                    </div>
+
+                    <div class="col mb-4"><input type="number" class="form-control" asp-for="Salary" placeholder="Gehalt" />
+                        <span asp-validation-for="Salary" class="text-danger"></span>
+                    </div>
+
+                </div>
+
+                <div class="row">
+                    <div class="col mb-4"><input type="url" class="form-control" asp-for="CompanyWebsite" placeholder="Homepage" />
+                        <span asp-validation-for="CompanyWebsite" class="text-danger"></span>
+                    </div>
+
+                </div>
+
+                <div class="row">
+                    <label>JobDescription</label>
+                    <div class="col mb-4"><textarea class="form-control" asp-for="JobDescription" placeholder="Jobbeschreibung"></textarea>
+                        <span asp-validation-for="JobDescription" class="text-danger"></span>
+                    </div>
+
+                </div>
+
+                <div class="row">
                     <label>Firmen Logo</label>
                     <div class="col"><input type="file" asp-for="CompanyImage" class="form-control" id="CompanyImage" name="file" /></div>
+                    <span asp-validation-for="CompanyImage" class="text-danger"></span>
+
+                </div>
+            </div>
+
+            <div class="card-footer">
+                <div class="text-end">
+                    <button class="btn btn-outline-primary" type="submit">Speichern</button>
+                    <a asp-action="Index" class="btn btn-secondary">Zurück zur Übersicht</a>
+                </div>
             </div>
         </div>
-        <div class="card-footer">
-            <div class="text-end">
-                <button class="btn btn-outline-primary" type="submit">Speichern</button>
-            </div>
-        </div>
-    </div>
     </form>
-
-    
-
-
+    @section Scripts {
+        @{
+            await Html.RenderPartialAsync("_ValidationScriptsPartial");
+        }
+    }
 </section>
