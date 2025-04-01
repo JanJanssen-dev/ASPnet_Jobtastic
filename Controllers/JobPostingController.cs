@@ -25,7 +25,7 @@ namespace ASPnet_Jobtastic.Controllers
             return View();
         }
 
-        public IActionResult CreateEditJob(JobPostingModel jobPostingModel, IFormFile file)
+        public IActionResult CreateJob(JobPostingModel jobPostingModel, IFormFile file)
         {
 
             //Username Abfangen
@@ -45,6 +45,43 @@ namespace ASPnet_Jobtastic.Controllers
 
 
             return RedirectToAction("Index");
+        }
+
+        // GET: JobPosting/Edit/{ID}
+        public IActionResult EditJob(int id) 
+        {
+            var job = _context.JobPostings.Find(id);
+            if (job == null) return View("Error");
+            return View("CreatedEditJobPosting",job);
+        }
+
+        // POST: JobPostings/Edit/{ID}
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult EditJob(int id, JobPostingModel jobPostingModel)
+        {
+            if (id != jobPostingModel.Id) return BadRequest();
+
+            if (ModelState.IsValid)
+            {
+                _context.Update(jobPostingModel);
+                _context.SaveChanges();
+                return RedirectToAction(nameof(Index));
+            }
+            return View(jobPostingModel);
+        }
+
+        // POST: JobPosting/Delete/{ID}
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult DeleteJob(int id)
+        {
+            var job = _context.JobPostings.Find(id);
+            if (job == null) return NotFound();
+
+            _context.JobPostings.Remove(job);
+            _context.SaveChanges();
+            return RedirectToAction(nameof(Index));
         }
     }
 }
