@@ -2,6 +2,7 @@
 using ASPnet_Jobtastic.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Reflection;
 
 namespace ASPnet_Jobtastic.Controllers
 {
@@ -36,12 +37,27 @@ namespace ASPnet_Jobtastic.Controllers
         {
             jobPostingModel.OwnerUsername = User.Identity.Name;
 
-            if (file != null)
+            if (file != null && file.Length > 0)
             {
                 using (var ms = new MemoryStream())
                 {
                     file.CopyTo(ms);
                     jobPostingModel.CompanyImage = ms.ToArray();
+                }
+            }
+            else
+            {
+                // Wenn kein Bild hochgeladen wurde, Standardbild aus wwwroot/images verwenden
+                var defaultPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "default-logo.png");
+
+                if (System.IO.File.Exists(defaultPath))
+                {
+                    jobPostingModel.CompanyImage = System.IO.File.ReadAllBytes(defaultPath);
+                }
+                else
+                {
+                    // Fallback, falls Standardbild fehlt
+                    jobPostingModel.CompanyImage = Array.Empty<byte>();
                 }
             }
 
@@ -54,6 +70,7 @@ namespace ASPnet_Jobtastic.Controllers
 
             return View("CreatedEditJobPosting", jobPostingModel);
         }
+
 
         // GET: Bestehendes JobPosting bearbeiten
         public IActionResult EditJob(int id)
@@ -79,17 +96,35 @@ namespace ASPnet_Jobtastic.Controllers
 
             jobPostingModel.OwnerUsername = existingJob.OwnerUsername;
 
-            if (file != null)
+            // Bildverarbeitung
+            if (file != null && file.Length > 0)
             {
+                // Neues Bild wurde hochgeladen
                 using (var ms = new MemoryStream())
                 {
                     file.CopyTo(ms);
                     jobPostingModel.CompanyImage = ms.ToArray();
                 }
             }
+            else if (existingJob.CompanyImage != null && existingJob.CompanyImage.Length > 0)
+            {
+                // Altes Bild weiterverwenden
+                jobPostingModel.CompanyImage = existingJob.CompanyImage;
+            }
             else
             {
-                jobPostingModel.CompanyImage = existingJob.CompanyImage;
+                // Standardbild aus wwwroot verwenden
+                var defaultPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "default-logo.png");
+
+                if (System.IO.File.Exists(defaultPath))
+                {
+                    jobPostingModel.CompanyImage = System.IO.File.ReadAllBytes(defaultPath);
+                }
+                else
+                {
+                    // Fallback falls das Standardbild fehlt
+                    jobPostingModel.CompanyImage = Array.Empty<byte>();
+                }
             }
 
             if (ModelState.IsValid)
@@ -112,6 +147,9 @@ namespace ASPnet_Jobtastic.Controllers
 
             return View("CreatedEditJobPosting", jobPostingModel);
         }
+
+
+
 
         // POST: JobPosting löschen
         [HttpPost]

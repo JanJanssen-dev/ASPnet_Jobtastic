@@ -70,8 +70,10 @@
 
                 <div class="row">
                     <label>Firmen Logo</label>
-                    <div class="col"><input type="file" asp-for="CompanyImage" class="form-control" id="CompanyImage" name="file" /></div>
-                    <span asp-validation-for="CompanyImage" class="text-danger"></span>
+                    <div class="col"><input type="file" asp-for="CompanyImage" class="form-control" id="CompanyImage" />
+                        <span asp-validation-for="CompanyImage" class="text-danger"></span>
+                    </div>
+                    
 
                 </div>
             </div>

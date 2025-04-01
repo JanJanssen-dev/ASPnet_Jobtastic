@@ -16,6 +16,7 @@
         <table class="table">
             <thead>
                 <tr>
+                    <th>Logo</th>
                     <th>Job Titel</th>
                     <th>Company</th>
                     <th>ASP</th>
@@ -28,14 +29,21 @@
                 @foreach (var item in Model)
                 {
                     <tr>
-                        <td>@item.JobTitle</td>
-                        <td>@item.CompanyName</td>
-                        <td>@item.ContactName</td>
-                        <td>@item.StartDate.ToShortDateString()</td>
                         <td>
+                            @if (item.CompanyImage != null && item.CompanyImage.Length > 0)
+                            {
+                                var base64 = Convert.ToBase64String(item.CompanyImage);
+                                <img src="data:image/png;base64,@base64" alt="Logo" style="max-width: 80px; max-height: 40px;" />
+                            }
+                        </td>
+                        <td class="align-middle">@item.JobTitle</td>
+                        <td class="align-middle">@item.CompanyName</td>
+                        <td class="align-middle">@item.ContactName</td>
+                        <td class="align-middle">@item.StartDate.ToShortDateString()</td>
+                        <td class="align-middle">
                             <a asp-action="EditJob" asp-route-id="@item.Id" class="btn btn-primary btn-sm">Bearbeiten</a>
                         </td>
-                        <td>
+                        <td class="align-middle">
                             <form asp-action="DeleteJob" asp-route-id="@item.Id" method="post"
                                   onsubmit="return confirm('Möchten Sie diesen Job wirklich löschen?');">
                                 <button type="submit" class="btn btn-danger btn-sm">Löschen</button>
@@ -44,6 +52,7 @@
                     </tr>
                 }
             </tbody>
+
         </table>
 </section>
     <div class="text-end">
