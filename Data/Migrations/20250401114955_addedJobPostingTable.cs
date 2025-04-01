@@ -26,7 +26,7 @@ namespace ASPnet_Jobtastic.Data.Migrations
                     ContactName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     ContactEmail = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     CompanyWebsite = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    CompanyImage = table.Column<byte[]>(type: "varbinary(max)", nullable: false),
+                    CompanyImage = table.Column<byte[]>(type: "varbinary(max)", nullable: true),
                     OwnerUsername = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>

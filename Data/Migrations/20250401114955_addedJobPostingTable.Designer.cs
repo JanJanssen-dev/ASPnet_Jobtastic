@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ASPnet_Jobtastic.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250331081119_addedJobPostingTable")]
+    [Migration("20250401114955_addedJobPostingTable")]
     partial class addedJobPostingTable
     {
         /// <inheritdoc />
@@ -34,7 +34,6 @@ namespace ASPnet_Jobtastic.Data.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<byte[]>("CompanyImage")
-                        .IsRequired()
                         .HasColumnType("varbinary(max)");
 
                     b.Property<string>("CompanyName")

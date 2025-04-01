@@ -1,4 +1,5 @@
-﻿using ASPnet_Jobtastic.Data;
+﻿using ASPnet_Jobtastic.Areas.Identity.Pages.Account;
+using ASPnet_Jobtastic.Data;
 using ASPnet_Jobtastic.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -9,10 +10,12 @@ namespace ASPnet_Jobtastic.Controllers
     public class JobPostingController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly ILogger<JobPostingController> _logger;
 
-        public JobPostingController(ApplicationDbContext context)
+        public JobPostingController(ApplicationDbContext context, ILogger<JobPostingController> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         // Übersicht aller JobPostings des eingeloggten Users
@@ -63,14 +66,22 @@ namespace ASPnet_Jobtastic.Controllers
 
             if (ModelState.IsValid)
             {
-                _context.JobPostings.Add(jobPostingModel);
-                _context.SaveChanges();
+                try
+                {
+                    _context.JobPostings.Add(jobPostingModel);
+                    _context.SaveChanges();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Fehler beim Speichern des JobPostings");
+                    throw;
+                }
+                LogModelErrors();
                 return RedirectToAction(nameof(Index));
             }
 
             return View("CreatedEditJobPosting", jobPostingModel);
         }
-
 
         // GET: Bestehendes JobPosting bearbeiten
         public IActionResult EditJob(int id)
@@ -134,22 +145,22 @@ namespace ASPnet_Jobtastic.Controllers
                     _context.Update(jobPostingModel);
                     _context.SaveChanges();
                 }
-                catch (DbUpdateConcurrencyException)
+                catch (DbUpdateConcurrencyException ex)
                 {
                     if (!_context.JobPostings.Any(e => e.Id == jobPostingModel.Id))
                         return NotFound();
                     else
+                    {
+                        _logger.LogError(ex, "Fehler beim Aktualisieren des JobPostings");
                         throw;
+                    }
                 }
-
+                LogModelErrors();
                 return RedirectToAction(nameof(Index));
             }
 
             return View("CreatedEditJobPosting", jobPostingModel);
         }
-
-
-
 
         // POST: JobPosting löschen
         [HttpPost]
@@ -164,5 +175,17 @@ namespace ASPnet_Jobtastic.Controllers
             _context.SaveChanges();
             return RedirectToAction(nameof(Index));
         }
+
+        private void LogModelErrors()
+        {
+            foreach (var entry in ModelState)
+            {
+                foreach (var error in entry.Value.Errors)
+                {
+                    _logger.LogWarning("Fehler bei Feld {Field}: {Error}", entry.Key, error.ErrorMessage);
+                }
+            }
+        }
     }
 }
+
