@@ -1,4 +1,5 @@
-﻿using ASPnet_Jobtastic.Data;
+﻿using ASPnet_Jobtastic.Authorization;
+using ASPnet_Jobtastic.Data;
 using ASPnet_Jobtastic.Models;
 using ASPnet_Jobtastic.Models.ViewModels;
 using Microsoft.AspNetCore.Authorization;
@@ -12,11 +13,16 @@ namespace ASPnet_Jobtastic.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly ILogger<JobPostingController> _logger;
+        private readonly JobPostingAuthorizationHelper _authHelper;
 
-        public JobPostingController(ApplicationDbContext context, ILogger<JobPostingController> logger)
+        public JobPostingController(
+            ApplicationDbContext context,
+            ILogger<JobPostingController> logger,
+            JobPostingAuthorizationHelper authHelper)
         {
             _context = context;
             _logger = logger;
+            _authHelper = authHelper;
         }
 
         // Übersicht aller JobPostings des eingeloggten Users
@@ -130,23 +136,19 @@ namespace ASPnet_Jobtastic.Controllers
         }
 
         // GET: Bestehendes JobPosting bearbeiten
-        public IActionResult EditJob(int id)
+        public async Task<IActionResult> EditJob(int id)
         {
-            var username = User.Identity?.Name;
-            if (string.IsNullOrEmpty(username))
+            // Autorisierung prüfen
+            var authResult = await _authHelper.AuthorizeJobPostingAsync(User, this, id, JobPostingOperations.Edit);
+            if (authResult != null)
             {
-                return RedirectToAction("Login", "Account", new { area = "Identity" });
+                return authResult;
             }
 
-            var job = _context.JobPostings.Find(id);
+            var job = await _context.JobPostings.FindAsync(id);
             if (job == null)
-                return NotFound();
-
-            // Überprüfen, ob der Benutzer den Job bearbeiten darf
-            if (!HasAccessToJobPosting(id, username, requireEditPermission: true))
             {
-                _logger.LogWarning("Unbefugter Zugriff auf JobPosting: {JobId} von {Username}", id, username);
-                return Content("<script>alert('Zugriff verweigert. Sie haben keine Berechtigung.'); history.back();</script>", "text/html");
+                return NotFound();
             }
 
             return View("CreatedEditJobPosting", job);
@@ -155,26 +157,24 @@ namespace ASPnet_Jobtastic.Controllers
         // POST: Bearbeitetes JobPosting speichern
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult EditJob(int id, JobPostingModel jobPostingModel, IFormFile CompanyImage)
+        public async Task<IActionResult> EditJob(int id, JobPostingModel jobPostingModel, IFormFile CompanyImage)
         {
-            var username = User.Identity?.Name;
-            if (string.IsNullOrEmpty(username))
+            // Autorisierung prüfen
+            var authResult = await _authHelper.AuthorizeJobPostingAsync(User, this, id, JobPostingOperations.Edit);
+            if (authResult != null)
             {
-                return RedirectToAction("Login", "Account", new { area = "Identity" });
+                return authResult;
             }
 
             if (id != jobPostingModel.Id)
-                return BadRequest();
-
-            var existingJob = _context.JobPostings.AsNoTracking().FirstOrDefault(j => j.Id == id);
-            if (existingJob == null)
-                return NotFound();
-            
-            // Überprüfen, ob der Benutzer den Job bearbeiten darf
-            if (!HasAccessToJobPosting(id, username, requireEditPermission: true))
             {
-                _logger.LogWarning("Unbefugter Zugriff auf JobPosting: {JobId} von {Username}", id, username);
-                return Content("<script>alert('Zugriff verweigert. Sie haben keine Berechtigung.'); history.back();</script>", "text/html");
+                return BadRequest();
+            }
+
+            var existingJob = await _context.JobPostings.AsNoTracking().FirstOrDefaultAsync(j => j.Id == id);
+            if (existingJob == null)
+            {
+                return NotFound();
             }
 
             // Bewahre Originaldaten
@@ -183,7 +183,7 @@ namespace ASPnet_Jobtastic.Controllers
 
             // Setze Änderungsinformationen
             jobPostingModel.ChangeDate = DateTime.Now;
-            jobPostingModel.ChangeUserName = username;
+            jobPostingModel.ChangeUserName = User.Identity?.Name;
 
             // Bildverarbeitung
             if (CompanyImage != null && CompanyImage.Length > 0)
@@ -232,13 +232,15 @@ namespace ASPnet_Jobtastic.Controllers
                 {
                     _context.Update(jobPostingModel);
                     _context.SaveChanges();
-                    _logger.LogInformation("JobPosting aktualisiert: {JobId} von {Username}", id, username);
+                    _logger.LogInformation("JobPosting aktualisiert: {JobId} von {Username}", id, User.Identity?.Name);
                     return RedirectToAction(nameof(Index));
                 }
                 catch (DbUpdateConcurrencyException ex)
                 {
                     if (!_context.JobPostings.Any(e => e.Id == jobPostingModel.Id))
+                    {
                         return NotFound();
+                    }
                     else
                     {
                         _logger.LogError(ex, "Fehler beim Aktualisieren des JobPostings");
@@ -259,30 +261,26 @@ namespace ASPnet_Jobtastic.Controllers
         // POST: JobPosting löschen
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult DeleteJob(int id)
+        public async Task<IActionResult> DeleteJob(int id)
         {
-            var username = User.Identity?.Name;
-            if (string.IsNullOrEmpty(username))
+            // Autorisierung prüfen
+            var authResult = await _authHelper.AuthorizeJobPostingAsync(User, this, id, JobPostingOperations.Delete);
+            if (authResult != null)
             {
-                return RedirectToAction("Login", "Account", new { area = "Identity" });
+                return authResult;
             }
 
-            var job = _context.JobPostings.Find(id);
+            var job = await _context.JobPostings.FindAsync(id);
             if (job == null)
-                return NotFound();
-
-            // Überprüfen, ob der Benutzer den Job löschen darf //auslagern
-            if (!HasAccessToJobPosting(id, username, requireDeletePermission: true))
             {
-                _logger.LogWarning("Unbefugter Löschversuch auf JobPosting: {JobId} von {Username}", id, username);
-                return Content("<script>alert('Zugriff verweigert. Sie haben keine Berechtigung.'); history.back();</script>", "text/html");
+                return NotFound();
             }
 
             try
             {
                 _context.JobPostings.Remove(job);
-                _context.SaveChanges();
-                _logger.LogInformation("JobPosting gelöscht: {JobId} von {Username}", id, username);
+                await _context.SaveChangesAsync();
+                _logger.LogInformation("JobPosting gelöscht: {JobId} von {Username}", id, User.Identity?.Name);
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
@@ -303,30 +301,27 @@ namespace ASPnet_Jobtastic.Controllers
                 }
             }
         }
+
         // GET: Freigaben für ein JobPosting anzeigen
-        public IActionResult ManageSharing(int id)
+        public async Task<IActionResult> ManageSharing(int id)
         {
-            var username = User.Identity?.Name;
-            if (string.IsNullOrEmpty(username))
+            // Autorisierung prüfen - nur der Eigentümer darf Freigaben verwalten
+            var authResult = await _authHelper.AuthorizeJobPostingAsync(User, this, id, JobPostingOperations.ManageSharing);
+            if (authResult != null)
             {
-                return RedirectToAction("Login", "Account", new { area = "Identity" });
+                return authResult;
             }
 
-            var job = _context.JobPostings.Find(id);
+            var job = await _context.JobPostings.FindAsync(id);
             if (job == null)
-                return NotFound();
-
-            // Überprüfen, ob der Benutzer der Besitzer des JobPostings ist
-            if (job.OwnerUsername != username)
             {
-                _logger.LogWarning("Unbefugter Zugriff auf JobPosting-Freigaben: {JobId} von {Username}", id, username);
-                return Content("<script>alert('Zugriff verweigert. Sie haben keine Berechtigung.'); history.back();</script>", "text/html");
+                return NotFound();
             }
 
             // Lade alle bestehenden Freigaben
-            var sharings = _context.JobSharings
+            var sharings = await _context.JobSharings
                 .Where(js => js.JobPostingId == id)
-                .ToList();
+                .ToListAsync();
 
             var viewModel = new JobSharingViewModel
             {
@@ -341,113 +336,72 @@ namespace ASPnet_Jobtastic.Controllers
         // POST: Neue Freigabe hinzufügen
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult AddSharing(JobSharingViewModel model)
+        public async Task<IActionResult> AddSharing(JobSharingViewModel model)
         {
-            var username = User.Identity?.Name;
-            if (string.IsNullOrEmpty(username))
+            var jobId = model.NewShare.JobPostingId;
+
+            // Autorisierung prüfen - nur der Eigentümer darf Freigaben hinzufügen
+            var authResult = await _authHelper.AuthorizeJobPostingAsync(User, this, jobId, JobPostingOperations.ManageSharing);
+            if (authResult != null)
             {
-                return RedirectToAction("Login", "Account", new { area = "Identity" });
+                return authResult;
             }
-
-            var job = _context.JobPostings.Find(model.NewShare.JobPostingId);
-            if (job == null)
-                return NotFound();
-
-            // Überprüfen, ob der Benutzer der Besitzer des JobPostings ist
-            if (job.OwnerUsername != username)
-            {
-                _logger.LogWarning("Unbefugter Zugriff auf JobPosting-Freigaben: {JobId} von {Username}", model.NewShare.JobPostingId, username);
-                return Content("<script>alert('Zugriff verweigert. Sie haben keine Berechtigung.'); history.back();</script>", "text/html");
-            }
-
-            // Prüfen, ob der Benutzer existiert (optional)
-            // ...
 
             // Prüfen, ob die Freigabe bereits existiert
-            var existingShare = _context.JobSharings
-                .FirstOrDefault(js => js.JobPostingId == model.NewShare.JobPostingId &&
-                                      js.SharedUsername == model.NewShare.SharedUsername);
+            var existingShare = await _context.JobSharings
+                .FirstOrDefaultAsync(js => js.JobPostingId == jobId &&
+                                     js.SharedUsername == model.NewShare.SharedUsername);
 
             if (existingShare != null)
             {
                 ModelState.AddModelError("NewShare.SharedUsername", "Dieser Benutzer hat bereits Zugriff auf dieses Inserat.");
-                return RedirectToAction(nameof(ManageSharing), new { id = model.NewShare.JobPostingId });
+                return RedirectToAction(nameof(ManageSharing), new { id = jobId });
             }
 
             // Neue Freigabe erstellen
             var newSharing = new JobSharingModel
             {
-                JobPostingId = model.NewShare.JobPostingId,
+                JobPostingId = jobId,
                 SharedUsername = model.NewShare.SharedUsername,
                 SharedDate = DateTime.Now,
-                SharedByUsername = username,
+                SharedByUsername = User.Identity?.Name,
                 CanEdit = model.NewShare.CanEdit,
                 CanDelete = model.NewShare.CanDelete
             };
 
             _context.JobSharings.Add(newSharing);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
 
-            return RedirectToAction(nameof(ManageSharing), new { id = model.NewShare.JobPostingId });
+            return RedirectToAction(nameof(ManageSharing), new { id = jobId });
         }
 
         // POST: Freigabe löschen
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult RemoveSharing(int id)
+        public async Task<IActionResult> RemoveSharing(int id)
         {
-            var username = User.Identity?.Name;
-            if (string.IsNullOrEmpty(username))
-            {
-                return RedirectToAction("Login", "Account", new { area = "Identity" });
-            }
-
-            var sharing = _context.JobSharings
+            var sharing = await _context.JobSharings
                 .Include(js => js.JobPosting)
-                .FirstOrDefault(js => js.Id == id);
+                .FirstOrDefaultAsync(js => js.Id == id);
 
             if (sharing == null)
-                return NotFound();
-
-            // Überprüfen, ob der Benutzer der Besitzer des JobPostings ist
-            if (sharing.JobPosting.OwnerUsername != username)
             {
-                _logger.LogWarning("Unbefugter Zugriff beim Löschen einer Freigabe: {SharingId} von {Username}", id, username);
-                return Content("<script>alert('Zugriff verweigert. Sie haben keine Berechtigung.'); history.back();</script>", "text/html");
+                return NotFound();
+            }
+
+            int jobId = sharing.JobPostingId;
+
+            // Autorisierung prüfen - nur der Eigentümer darf Freigaben löschen
+            var authResult = await _authHelper.AuthorizeJobPostingAsync(User, this, jobId, JobPostingOperations.ManageSharing);
+            if (authResult != null)
+            {
+                return authResult;
             }
 
             _context.JobSharings.Remove(sharing);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
 
-            return RedirectToAction(nameof(ManageSharing), new { id = sharing.JobPostingId });
-        }
-
-        // Methode aktualisieren: Zugriff prüfen für Edit/Delete mit Freigaben
-        private bool HasAccessToJobPosting(int jobId, string username, bool requireEditPermission = false, bool requireDeletePermission = false)
-        {
-            var job = _context.JobPostings.Find(jobId);
-            if (job == null)
-                return false;
-
-            // Eigentümer hat immer alle Rechte
-            if (job.OwnerUsername == username)
-                return true;
-
-            // Prüfe auf Freigabe
-            var sharing = _context.JobSharings
-                .FirstOrDefault(js => js.JobPostingId == jobId && js.SharedUsername == username);
-
-            if (sharing == null)
-                return false;
-
-            // Prüfe spezifische Rechte wenn gefordert
-            if (requireEditPermission && !sharing.CanEdit)
-                return false;
-
-            if (requireDeletePermission && !sharing.CanDelete)
-                return false;
-
-            return true;
+            return RedirectToAction(nameof(ManageSharing), new { id = jobId });
         }
     }
 }
