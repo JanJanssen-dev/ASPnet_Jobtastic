@@ -40,7 +40,7 @@
 
                     <div class="col mb-4">
                         <label asp-for="StartDate" class="form-label">Start Datum <span class="text-danger">*</span></label>
-                        <input type="date" class="form-control" asp-for="StartDate" placeholder="Start Datum" required />
+                        <input type="date" class="form-control" asp-for="StartDate" placeholder="Start Datum" value="@DateTime.Now.ToString("yyyy-MM-dd")" required />
                         <span asp-validation-for="StartDate" class="text-danger"></span>
                     </div>
                 </div>
