@@ -31,10 +31,7 @@ builder.Services.Configure<IdentityOptions>(options =>
 
 // Authorization Services hinzufügen
 builder.Services.AddAuthorization(options => {
-    // Eine allgemeine Policy für authentifizierte Benutzer
-    options.FallbackPolicy = new AuthorizationPolicyBuilder()
-        .RequireAuthenticatedUser()
-        .Build();
+    // Keine FallbackPolicy setzen - Standardverhalten beibehalten
 });
 
 // Den AuthorizationHandler registrieren

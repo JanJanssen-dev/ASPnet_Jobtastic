@@ -1,6 +1,4 @@
-﻿// Diese Hilfsklasse macht es einfacher, die Autorisierung im Controller aufzurufen
-
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ASPnet_Jobtastic.Authorization
@@ -53,25 +51,9 @@ namespace ASPnet_Jobtastic.Authorization
                 return controller.RedirectToAction("Login", "Account", new { area = "Identity", returnUrl });
             }
 
-            // Benutzer ist angemeldet, aber nicht autorisiert - SweetAlert2 anzeigen
-            return new ContentResult
-            {
-                ContentType = "text/html",
-                Content = @"
-            <script>
-                document.addEventListener('DOMContentLoaded', function() {
-                    Swal.fire({
-                        title: 'Zugriff verweigert',
-                        text: 'Sie haben keine Berechtigung für diese Aktion.',
-                        icon: 'error',
-                        confirmButtonColor: '#3085d6',
-                        confirmButtonText: 'Zurück'
-                    }).then((result) => {
-                        window.location.href = '" + (returnUrl ?? controller.Url.Action("Index", "JobPosting")) + @"';
-                    });
-                });
-            </script>"
-            };
+            // Verwende TempData für die Fehlermeldung und leite direkt zurück
+            controller.TempData["ErrorMessage"] = "Zugriff verweigert. Sie haben keine Berechtigung für diese Aktion.";
+            return controller.RedirectToAction("Index", "JobPosting");
         }
     }
 }
