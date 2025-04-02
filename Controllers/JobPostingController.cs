@@ -1,12 +1,12 @@
-﻿using ASPnet_Jobtastic.Areas.Identity.Pages.Account;
-using ASPnet_Jobtastic.Data;
+﻿using ASPnet_Jobtastic.Data;
 using ASPnet_Jobtastic.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Reflection;
 
 namespace ASPnet_Jobtastic.Controllers
 {
+    [Authorize] // Stellt sicher, dass nur angemeldete Benutzer zugreifen können
     public class JobPostingController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -21,8 +21,14 @@ namespace ASPnet_Jobtastic.Controllers
         // Übersicht aller JobPostings des eingeloggten Users
         public IActionResult Index()
         {
+            var username = User.Identity?.Name;
+            if (string.IsNullOrEmpty(username))
+            {
+                return RedirectToAction("Login", "Account", new { area = "Identity" });
+            }
+
             var jobPostingsFromDb = _context.JobPostings
-                .Where(x => x.OwnerUsername == User.Identity.Name)
+                .Where(x => x.OwnerUsername == username)
                 .ToList();
             return View(jobPostingsFromDb);
         }
@@ -38,14 +44,33 @@ namespace ASPnet_Jobtastic.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult CreateJob(JobPostingModel jobPostingModel, IFormFile CompanyImage)
         {
-            jobPostingModel.OwnerUsername = User.Identity.Name;
+            var username = User.Identity?.Name;
+            if (string.IsNullOrEmpty(username))
+            {
+                return RedirectToAction("Login", "Account", new { area = "Identity" });
+            }
+
+            jobPostingModel.OwnerUsername = username;
+            // Setze Erstellungsdatum
+            jobPostingModel.CreationDate = DateTime.Now;
+            // Bei Erstellung ist der ändernde Benutzer der Ersteller
+            jobPostingModel.ChangeDate = DateTime.Now;
+            jobPostingModel.ChangeUserName = username;
 
             if (CompanyImage != null && CompanyImage.Length > 0)
             {
-                using (var ms = new MemoryStream())
+                try
                 {
-                    CompanyImage.CopyTo(ms);
-                    jobPostingModel.CompanyImage = ms.ToArray();
+                    using (var ms = new MemoryStream())
+                    {
+                        CompanyImage.CopyTo(ms);
+                        jobPostingModel.CompanyImage = ms.ToArray();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Fehler beim Verarbeiten des Bildes");
+                    ModelState.AddModelError("CompanyImage", "Fehler beim Verarbeiten des Bildes. Bitte versuchen Sie es erneut.");
                 }
             }
             else
@@ -71,25 +96,39 @@ namespace ASPnet_Jobtastic.Controllers
                 {
                     _context.JobPostings.Add(jobPostingModel);
                     _context.SaveChanges();
+                    _logger.LogInformation("Neues JobPosting erstellt: {JobId} von {Username}", jobPostingModel.Id, username);
+                    return RedirectToAction(nameof(Index));
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Fehler beim Speichern des JobPostings");
-                    throw;
+                    ModelState.AddModelError("", "Fehler beim Speichern des JobPostings. Bitte versuchen Sie es später erneut.");
                 }
-                LogModelErrors();
-                return RedirectToAction(nameof(Index));
             }
 
+            LogModelErrors();
             return View("CreatedEditJobPosting", jobPostingModel);
         }
 
         // GET: Bestehendes JobPosting bearbeiten
         public IActionResult EditJob(int id)
         {
+            var username = User.Identity?.Name;
+            if (string.IsNullOrEmpty(username))
+            {
+                return RedirectToAction("Login", "Account", new { area = "Identity" });
+            }
+
             var job = _context.JobPostings.Find(id);
             if (job == null)
                 return NotFound();
+
+            // Überprüfen, ob der Benutzer der Besitzer des JobPostings ist
+            if (job.OwnerUsername != username)
+            {
+                _logger.LogWarning("Unbefugter Zugriff auf JobPosting: {JobId} von {Username}", id, username);
+                return Forbid();
+            }
 
             return View("CreatedEditJobPosting", job);
         }
@@ -99,6 +138,12 @@ namespace ASPnet_Jobtastic.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult EditJob(int id, JobPostingModel jobPostingModel, IFormFile CompanyImage)
         {
+            var username = User.Identity?.Name;
+            if (string.IsNullOrEmpty(username))
+            {
+                return RedirectToAction("Login", "Account", new { area = "Identity" });
+            }
+
             if (id != jobPostingModel.Id)
                 return BadRequest();
 
@@ -106,16 +151,37 @@ namespace ASPnet_Jobtastic.Controllers
             if (existingJob == null)
                 return NotFound();
 
+            // Überprüfen, ob der Benutzer der Besitzer des JobPostings ist
+            if (existingJob.OwnerUsername != username)
+            {
+                _logger.LogWarning("Unbefugter Zugriff auf JobPosting: {JobId} von {Username}", id, username);
+                return Forbid();
+            }
+
+            // Setze neue Änderungsinformationen
+            jobPostingModel.ChangeDate = DateTime.Now;
+            jobPostingModel.ChangeUserName = username;
+
+            // Bewahre das ursprüngliche Erstellungsdatum
+            jobPostingModel.CreationDate = existingJob.CreationDate;
             jobPostingModel.OwnerUsername = existingJob.OwnerUsername;
 
             // Bildverarbeitung
             if (CompanyImage != null && CompanyImage.Length > 0)
             {
-                // Neues Bild wurde hochgeladen
-                using (var ms = new MemoryStream())
+                try
                 {
-                    CompanyImage.CopyTo(ms);
-                    jobPostingModel.CompanyImage = ms.ToArray();
+                    // Neues Bild wurde hochgeladen
+                    using (var ms = new MemoryStream())
+                    {
+                        CompanyImage.CopyTo(ms);
+                        jobPostingModel.CompanyImage = ms.ToArray();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Fehler beim Verarbeiten des Bildes");
+                    ModelState.AddModelError("CompanyImage", "Fehler beim Verarbeiten des Bildes. Bitte versuchen Sie es erneut.");
                 }
             }
             else if (existingJob.CompanyImage != null && existingJob.CompanyImage.Length > 0)
@@ -147,6 +213,8 @@ namespace ASPnet_Jobtastic.Controllers
                 {
                     _context.Update(jobPostingModel);
                     _context.SaveChanges();
+                    _logger.LogInformation("JobPosting aktualisiert: {JobId} von {Username}", id, username);
+                    return RedirectToAction(nameof(Index));
                 }
                 catch (DbUpdateConcurrencyException ex)
                 {
@@ -155,13 +223,17 @@ namespace ASPnet_Jobtastic.Controllers
                     else
                     {
                         _logger.LogError(ex, "Fehler beim Aktualisieren des JobPostings");
-                        throw;
+                        ModelState.AddModelError("", "Fehler beim Aktualisieren des JobPostings. Bitte versuchen Sie es später erneut.");
                     }
                 }
-                LogModelErrors();
-                return RedirectToAction(nameof(Index));
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Unerwarteter Fehler beim Aktualisieren des JobPostings");
+                    ModelState.AddModelError("", "Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.");
+                }
             }
 
+            LogModelErrors();
             return View("CreatedEditJobPosting", jobPostingModel);
         }
 
@@ -170,13 +242,36 @@ namespace ASPnet_Jobtastic.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult DeleteJob(int id)
         {
+            var username = User.Identity?.Name;
+            if (string.IsNullOrEmpty(username))
+            {
+                return RedirectToAction("Login", "Account", new { area = "Identity" });
+            }
+
             var job = _context.JobPostings.Find(id);
             if (job == null)
                 return NotFound();
 
-            _context.JobPostings.Remove(job);
-            _context.SaveChanges();
-            return RedirectToAction(nameof(Index));
+            // Überprüfen, ob der Benutzer der Besitzer des JobPostings ist
+            if (job.OwnerUsername != username)
+            {
+                _logger.LogWarning("Unbefugter Löschversuch auf JobPosting: {JobId} von {Username}", id, username);
+                return Forbid();
+            }
+
+            try
+            {
+                _context.JobPostings.Remove(job);
+                _context.SaveChanges();
+                _logger.LogInformation("JobPosting gelöscht: {JobId} von {Username}", id, username);
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Fehler beim Löschen des JobPostings: {JobId}", id);
+                TempData["ErrorMessage"] = "Fehler beim Löschen des Job-Inserats. Bitte versuchen Sie es später erneut.";
+                return RedirectToAction(nameof(Index));
+            }
         }
 
         private void LogModelErrors()
@@ -189,7 +284,5 @@ namespace ASPnet_Jobtastic.Controllers
                 }
             }
         }
-
     }
 }
-

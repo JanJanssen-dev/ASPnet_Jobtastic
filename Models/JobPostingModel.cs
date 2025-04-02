@@ -9,10 +9,14 @@
         public DateTime StartDate { get; set; }
         public int Salary { get; set; }
         public string CompanyName { get; set; } = string.Empty;
-        public string ContactName { get; set; } = string.Empty;
+        public string? ContactName { get; set; } = string.Empty;
         public string ContactEmail { get; set; } = string.Empty;
-        public string CompanyWebsite { get; set; } = string.Empty;
+        public string? CompanyWebsite { get; set; } = string.Empty;
         public byte[]? CompanyImage { get; set; } 
         public string OwnerUsername { get; set; } = string.Empty;
+        public DateTime? CreationDate { get; set; }
+        public DateTime? ChangeDate { get; set; }
+        public string? ChangeUserName {  get; set; } = string.Empty;
+        public string[]? AllowedUserNames { get; set; }
     }
 }

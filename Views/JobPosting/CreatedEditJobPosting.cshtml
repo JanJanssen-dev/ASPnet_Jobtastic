@@ -9,7 +9,14 @@
         <h2>@ViewData["Title"]</h2>
     </div>
 
-    <form asp-controller="JobPosting" asp-action="@(Model.Id != 0 ? "EditJob" : "CreateJob")" enctype="multipart/form-data">
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger mt-3">
+            @TempData["ErrorMessage"]
+        </div>
+    }
+
+    <form asp-controller="JobPosting" asp-action="@(Model.Id != 0 ? "EditJob" : "CreateJob")" method="post" enctype="multipart/form-data">
         @Html.AntiForgeryToken()
         @if (Model.Id != 0)
         {
@@ -20,77 +27,69 @@
             <div class="card-body">
                 <div class="row">
                     <div class="col mb-4">
-                        <input type="text" class="form-control" asp-for="JobTitle" placeholder="Jobtitel" />
+                        <label asp-for="JobTitle" class="form-label">Jobtitel <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" asp-for="JobTitle" placeholder="Jobtitel" required />
                         <span asp-validation-for="JobTitle" class="text-danger"></span>
                     </div>
 
                     <div class="col mb-4">
-                        <input type="text" class="form-control" asp-for="JobLocation" placeholder="Ort" />
+                        <label asp-for="JobLocation" class="form-label">Ort <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" asp-for="JobLocation" placeholder="Ort" required />
                         <span asp-validation-for="JobLocation" class="text-danger"></span>
                     </div>
 
-                    <div class="col mb-4"><input type="date" class="form-control" asp-for="StartDate" placeholder="Start Datum" />
+                    <div class="col mb-4">
+                        <label asp-for="StartDate" class="form-label">Start Datum <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" asp-for="StartDate" placeholder="Start Datum" required />
                         <span asp-validation-for="StartDate" class="text-danger"></span>
                     </div>
                 </div>
 
                 <div class="row">
-                    <div class="col mb-4"><input type="text" class="form-control" asp-for="CompanyName" placeholder="Firmenname" />
+                    <div class="col mb-4">
+                        <label asp-for="CompanyName" class="form-label">Firmenname <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" asp-for="CompanyName" placeholder="Firmenname" required />
                         <span asp-validation-for="CompanyName" class="text-danger"></span>
                     </div>
 
-                    <div class="col mb-4"><input type="text" class="form-control" asp-for="ContactName" placeholder="ASP-Name" />
-                        <span asp-validation-for="ContactName" class="text-danger"></span>
+                    <div class="col mb-4">
+                        <label asp-for="ContactName" class="form-label">Ansprechpartner <span class="text-danger"></span></label>
+                        <input type="text" class="form-control" asp-for="ContactName" placeholder="Name des Ansprechpartners" />
+                        @* <span asp-validation-for="ContactName" class="text-danger"></span> *@
                     </div>
 
-                    <div class="col mb-4"><input type="email" class="form-control" asp-for="ContactEmail" placeholder="ASP-Mail" />
+                    <div class="col mb-4">
+                        <label asp-for="ContactEmail" class="form-label">E-Mail <span class="text-danger">*</span></label>
+                        <input type="email" class="form-control" asp-for="ContactEmail" placeholder="E-Mail des Ansprechpartners" required />
                         <span asp-validation-for="ContactEmail" class="text-danger"></span>
                     </div>
 
-                    <div class="col mb-4"><input type="number" class="form-control" asp-for="Salary" placeholder="Gehalt" />
+                    <div class="col mb-4">
+                        <label asp-for="Salary" class="form-label">Gehalt</label>
+                        <input type="number" class="form-control" asp-for="Salary" placeholder="Gehalt" />
                         <span asp-validation-for="Salary" class="text-danger"></span>
                     </div>
-
                 </div>
 
                 <div class="row">
-                    <div class="col mb-4"><input type="url" class="form-control" asp-for="CompanyWebsite" placeholder="Homepage" />
-                        <span asp-validation-for="CompanyWebsite" class="text-danger"></span>
+                    <div class="col mb-4">
+                        <label asp-for="CompanyWebsite" class="form-label">Homepage</label>
+                        <input type="url" class="form-control" asp-for="CompanyWebsite" placeholder="https://www.beispiel.de" />
+                        @* <span asp-validation-for="CompanyWebsite" class="text-danger"></span> *@
                     </div>
-
                 </div>
 
                 <div class="row">
-                    <label>JobDescription</label>
-                    <div class="col mb-4"><textarea class="form-control" asp-for="JobDescription" placeholder="Jobbeschreibung"></textarea>
+                    <div class="col mb-4">
+                        <label asp-for="JobDescription" class="form-label">Jobbeschreibung <span class="text-danger">*</span></label>
+                        <textarea class="form-control" asp-for="JobDescription" placeholder="Beschreiben Sie hier die Stelle im Detail" rows="5" required></textarea>
                         <span asp-validation-for="JobDescription" class="text-danger"></span>
                     </div>
-
                 </div>
 
-                @* <div class="row">
-                    <label>Firmen Logo</label>
-                    <div class="col"><input type="file" asp-for="CompanyImage" class="form-control" id="CompanyImage" />
-                        <span asp-validation-for="CompanyImage" class="text-danger"></span>
-                    </div> *@
-                @* <div class="row">
-                    <label>Firmen Logo</label>
-                    <div class="col">
-                        @if (Model.CompanyImage != null && Model.CompanyImage.Length > 0)
-                        {
-                            <div class="mb-2">
-                                <img src="data:image/jpeg;base64,@(Convert.ToBase64String(Model.CompanyImage))"
-                                     alt="Aktuelles Firmenlogo" style="max-width: 200px;" />
-                                <p>Aktuelles Logo (bleibt erhalten, wenn kein neues hochgeladen wird)</p>
-                            </div>
-                        }
-                        <input type="file" asp-for="CompanyImage" class="form-control" id="CompanyImage" />
-                        <span asp-validation-for="CompanyImage" class="text-danger"></span>
-                    </div>
-                </div> *@
                 <div class="row">
-                    <label>Firmen Logo</label>
                     <div class="col">
+                        <label asp-for="CompanyImage" class="form-label">Firmen Logo</label>
                         @if (Model.CompanyImage != null && Model.CompanyImage.Length > 0)
                         {
                             <div class="mb-2">
@@ -98,7 +97,7 @@
                                      alt="Aktuelles Firmenlogo" style="max-width: 200px;" />
                                 <p class="text-info">
                                     <i class="fas fa-info-circle"></i>
-                                    Aktuelles Bild: @(Model.Id > 0 ? $"Logo für Job SCHWACHSINN ABER GEHT #{Model.Id}" : "Neu hochgeladenes Bild")
+                                    Aktuelles Logo
                                 </p>
                             </div>
                         }
@@ -106,8 +105,6 @@
                         <span asp-validation-for="CompanyImage" class="text-danger"></span>
                         <small class="form-text text-muted">Lade ein neues Bild hoch oder lasse dieses Feld leer, um das aktuelle Bild beizubehalten.</small>
                     </div>
-                </div>
-
                 </div>
             </div>
 
