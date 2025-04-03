@@ -1,4 +1,6 @@
+using ASPnet_Jobtastic.Authorization;
 using ASPnet_Jobtastic.Data;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,7 +13,8 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 //wenn true wird Mail versendet zu Auth
-builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = false) 
+builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = false)
+    .AddRoles<IdentityRole>() // Rollen-Support hinzufügen
     .AddEntityFrameworkStores<ApplicationDbContext>();
 builder.Services.AddControllersWithViews();
 
@@ -25,6 +28,17 @@ builder.Services.Configure<IdentityOptions>(options =>
     options.Password.RequiredLength = 5;
     options.Password.RequiredUniqueChars = 0;
 });
+
+// Authorization Services hinzufügen
+builder.Services.AddAuthorization(options => {
+    // Keine FallbackPolicy setzen - Standardverhalten beibehalten
+});
+
+// Den AuthorizationHandler registrieren
+builder.Services.AddScoped<IAuthorizationHandler, JobPostingAuthorizationHandler>();
+
+// Den Authorization-Helper als Service registrieren
+builder.Services.AddScoped<JobPostingAuthorizationHelper>();
 
 var app = builder.Build();
 
@@ -40,13 +54,12 @@ else
     app.UseHsts();
 }
 
-
-
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(

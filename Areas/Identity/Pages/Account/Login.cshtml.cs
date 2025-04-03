@@ -64,23 +64,25 @@ namespace ASPnet_Jobtastic.Areas.Identity.Pages.Account
             ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
             ///     directly from your code. This API may change or be removed in future releases.
             /// </summary>
-            [Required]
-            [EmailAddress]
-            public string Email { get; set; }
+            [Required(ErrorMessage = "Benutzername ist erforderlich")]
+            [DataType(DataType.Text)]
+            [Display(Name = "Benutzername")]
+            public string UserName { get; set; }
 
             /// <summary>
             ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
             ///     directly from your code. This API may change or be removed in future releases.
             /// </summary>
-            [Required]
+            [Required(ErrorMessage = "Passwort ist erforderlich")]
             [DataType(DataType.Password)]
+            [Display(Name = "Passwort")]
             public string Password { get; set; }
 
             /// <summary>
             ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
             ///     directly from your code. This API may change or be removed in future releases.
             /// </summary>
-            [Display(Name = "Remember me?")]
+            [Display(Name = "Eingeloggt bleiben?")]
             public bool RememberMe { get; set; }
         }
 
@@ -111,11 +113,12 @@ namespace ASPnet_Jobtastic.Areas.Identity.Pages.Account
             {
                 // This doesn't count login failures towards account lockout
                 // To enable password failures to trigger account lockout, set lockoutOnFailure: true
-                var result = await _signInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
+                var result = await _signInManager.PasswordSignInAsync(Input.UserName, Input.Password, Input.RememberMe, lockoutOnFailure: false);
                 if (result.Succeeded)
                 {
-                    _logger.LogInformation("User logged in.");
-                    return LocalRedirect(returnUrl);
+                    _logger.LogInformation("Benutzer \u001b[34m{UserName}\u001b[0m hat sich angemeldet.", Input.UserName);
+                    // Setzen der neuen Url nach Login
+                    return RedirectToAction("Index", "JobPosting");
                 }
                 if (result.RequiresTwoFactor)
                 {
@@ -123,12 +126,12 @@ namespace ASPnet_Jobtastic.Areas.Identity.Pages.Account
                 }
                 if (result.IsLockedOut)
                 {
-                    _logger.LogWarning("User account locked out.");
+                    _logger.LogWarning("Benutzer {UserName} wurde Abgemeldet.", Input.UserName);
                     return RedirectToPage("./Lockout");
                 }
                 else
                 {
-                    ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+                    ModelState.AddModelError(string.Empty, "Ungültiger Anmeldeversuch.");
                     return Page();
                 }
             }

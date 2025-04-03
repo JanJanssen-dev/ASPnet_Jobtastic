@@ -1,0 +1,127 @@
+﻿@using ASPnet_Jobtastic.Models.ViewModels
+@model JobSharingViewModel
+
+@{
+    ViewData["Title"] = "Freigaben verwalten";
+}
+
+<section class="p-6 bg-light rounded shadow-sm">
+    <div class="mt-2 p-2 bg-primary text-white rounded text-center">
+        <h2>Freigaben für "@Model.JobPosting.JobTitle"</h2>
+    </div>
+
+    <div class="mt-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4>Neue Freigabe hinzufügen</h4>
+            </div>
+            <div class="card-body">
+                <form asp-action="AddSharing" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="NewShare.JobPostingId" value="@Model.JobPosting.Id" />
+
+                    <div class="row g-3 align-items-center">
+                        <div class="col-md-5">
+                            <label asp-for="NewShare.SharedUsername" class="form-label">Benutzername</label>
+                            <input type="text" class="form-control" asp-for="NewShare.SharedUsername" placeholder="Benutzername eingeben" required />
+                            <span asp-validation-for="NewShare.SharedUsername" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-md-3">
+                            <div class="form-check mt-4">
+                                <input class="form-check-input" type="checkbox" asp-for="NewShare.CanEdit" id="canEdit">
+                                <label class="form-check-label" for="canEdit">
+                                    Bearbeiten erlauben
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="col-md-3">
+                            <div class="form-check mt-4">
+                                <input class="form-check-input" type="checkbox" asp-for="NewShare.CanDelete" id="canDelete">
+                                <label class="form-check-label" for="canDelete">
+                                    Löschen erlauben
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="col-md-1">
+                            <button type="submit" class="btn btn-primary mt-4">Hinzufügen</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h4>Bestehende Freigaben</h4>
+            </div>
+            <div class="card-body">
+                @if (Model.ExistingShares.Any())
+                {
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Benutzername</th>
+                                <th>Freigegeben am</th>
+                                <th>Freigegeben von</th>
+                                <th>Berechtigungen</th>
+                                <th>Aktionen</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var share in Model.ExistingShares)
+                            {
+                                <tr>
+                                    <td>@share.SharedUsername</td>
+                                    <td>@share.SharedDate.ToShortDateString()</td>
+                                    <td>@share.SharedByUsername</td>
+                                    <td>
+                                        @if (share.CanEdit && share.CanDelete)
+                                        {
+                                            <span class="badge bg-success">Vollzugriff</span>
+                                        }
+                                        else if (share.CanEdit)
+                                        {
+                                            <span class="badge bg-primary">Bearbeiten</span>
+                                        }
+                                        else if (share.CanDelete)
+                                        {
+                                            <span class="badge bg-danger">Löschen</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">Nur Ansicht</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <form asp-action="RemoveSharing" asp-route-id="@share.Id" method="post"
+                                              onsubmit="return confirm('Möchten Sie diese Freigabe wirklich entfernen?');">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-danger btn-sm">Entfernen</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+                else
+                {
+                    <p class="text-muted">Dieses Inserat wurde noch nicht für andere Benutzer freigegeben.</p>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-4 text-end">
+        <a asp-action="Index" class="btn btn-secondary">Zurück zur Übersicht</a>
+    </div>
+
+    @section Scripts {
+        @{
+            await Html.RenderPartialAsync("_ValidationScriptsPartial");
+        }
+    }
+</section>

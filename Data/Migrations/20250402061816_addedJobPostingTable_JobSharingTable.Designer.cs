@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ASPnet_Jobtastic.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250331081119_addedJobPostingTable")]
-    partial class addedJobPostingTable
+    [Migration("20250402061816_addedJobPostingTable_JobSharingTable")]
+    partial class addedJobPostingTable_JobSharingTable
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -33,8 +33,16 @@ namespace ASPnet_Jobtastic.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("AllowedUserNames")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("ChangeDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ChangeUserName")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<byte[]>("CompanyImage")
-                        .IsRequired()
                         .HasColumnType("varbinary(max)");
 
                     b.Property<string>("CompanyName")
@@ -42,7 +50,6 @@ namespace ASPnet_Jobtastic.Data.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("CompanyWebsite")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ContactEmail")
@@ -50,8 +57,10 @@ namespace ASPnet_Jobtastic.Data.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ContactName")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("CreationDate")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("JobDescription")
                         .IsRequired()
@@ -78,6 +87,41 @@ namespace ASPnet_Jobtastic.Data.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("JobPostings");
+                });
+
+            modelBuilder.Entity("ASPnet_Jobtastic.Models.JobSharingModel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("CanDelete")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("CanEdit")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("JobPostingId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("SharedByUsername")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("SharedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("SharedUsername")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("JobPostingId");
+
+                    b.ToTable("JobSharings");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -280,6 +324,17 @@ namespace ASPnet_Jobtastic.Data.Migrations
                     b.HasKey("UserId", "LoginProvider", "Name");
 
                     b.ToTable("AspNetUserTokens", (string)null);
+                });
+
+            modelBuilder.Entity("ASPnet_Jobtastic.Models.JobSharingModel", b =>
+                {
+                    b.HasOne("ASPnet_Jobtastic.Models.JobPostingModel", "JobPosting")
+                        .WithMany()
+                        .HasForeignKey("JobPostingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("JobPosting");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
