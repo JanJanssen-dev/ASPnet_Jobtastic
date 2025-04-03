@@ -1,0 +1,210 @@
+﻿@model List<ASPnet_Jobtastic.Controllers.UserRoleViewModel>
+@{
+    ViewData["Title"] = "Benutzer & Rollen verwalten";
+    var allRoles = ViewBag.AllRoles as List<string>;
+}
+
+<div class="mt-4 p-5 bg-primary text-white rounded text-center">
+    <h1 class="display-4 mb-4">Benutzerverwaltung</h1>
+    <p>Verwalten Sie Benutzerkonten und Rollenzuweisungen für Jobtastic</p>
+</div>
+
+<section class="mt-4 p-4 bg-light rounded shadow-sm">
+    <h2 class="mb-4 text-center">Benutzer & Rollen</h2>
+
+    @if (Model != null && Model.Any())
+    {
+        <div class="table-responsive">
+            <table id="usersTable" class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>E-Mail</th>
+                        <th>Aktuelle Rollen</th>
+                        <th>Aktionen</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var user in Model)
+                    {
+                        <tr>
+                            <td>@user.Email</td>
+                            <td>
+                                @if (user.Roles.Any())
+                                {
+                                    @foreach (var role in user.Roles)
+                                    {
+                                        <span class="badge bg-info text-dark me-1">
+                                            @role
+                                            <a href="#" class="text-danger ms-1"
+                                               onclick="confirmRemoveRole('@user.UserId', '@role', '@user.Email.Replace("'", "\\'"))')">
+                                                <i class="fas fa-times"></i>
+                                            </a>
+                                        </span>
+                                    }
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Keine Rollen zugewiesen</span>
+                                }
+                            </td>
+                            <td>
+                                <button type="button" class="btn btn-primary btn-sm"
+                                        onclick="showRoleManager('@user.UserId', '@user.Email.Replace("'", "\\'"))')">
+                                    <i class="fas fa-user-cog me-1"></i> Rollen verwalten
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info text-center">
+            <p>Keine Benutzer verfügbar.</p>
+        </div>
+    }
+</section>
+
+@* Hidden form for role removal *@
+<form id="removeRoleForm" method="post" asp-action="RemoveRole" style="display: none;">
+    <input type="hidden" id="removeUserId" name="userId" />
+    <input type="hidden" id="removeRole" name="role" />
+</form>
+
+@* Hidden form for role addition *@
+<form id="addRoleForm" method="post" asp-action="AddRole" style="display: none;">
+    <input type="hidden" id="addUserId" name="userId" />
+    <input type="hidden" id="addRole" name="role" />
+</form>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // DataTable initialisieren
+            $('#usersTable').DataTable({
+                language: {
+                    url: 'https://cdn.datatables.net/plug-ins/1.11.5/i18n/de-DE.json'
+                },
+                responsive: true,
+                lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "Alle"]],
+                order: [[0, 'asc']], // Nach E-Mail aufsteigend sortieren
+                columnDefs: [
+                    { targets: 0, orderable: true }, // E-Mail
+                    { targets: 1, orderable: false }, // Rollen
+                    { targets: 2, orderable: false, width: "150px" } // Aktionen-Spalte
+                ]
+            });
+        });
+
+        /**
+         * Bestätigen des Entfernens einer Rolle
+         */
+        function confirmRemoveRole(userId, role, email) {
+            Swal.fire({
+                title: 'Rolle entfernen',
+                html: `Möchten Sie wirklich die Rolle <strong>${role}</strong> vom Benutzer <strong>${email}</strong> entfernen?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Ja, entfernen',
+                cancelButtonText: 'Abbrechen'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Formular ausfüllen und absenden
+                    document.getElementById('removeUserId').value = userId;
+                    document.getElementById('removeRole').value = role;
+                    document.getElementById('removeRoleForm').submit();
+                }
+            });
+        }
+
+        /**
+         * Zeigt den Rollen-Manager für einen Benutzer
+         */
+        function showRoleManager(userId, email) {
+            // Verfügbare Rollen aus dem ViewBag
+            const allRoles = @Html.Raw(Json.Serialize(allRoles));
+
+            // Aktuelle Rollen des Benutzers ermitteln
+            const userRoles = [];
+            const model = @Html.Raw(Json.Serialize(Model));
+            const user = model.find(u => u.userId === userId);
+
+            if (user) {
+                user.roles.forEach(role => userRoles.push(role));
+            }
+
+            // Optionen für das Dropdown-Menü erstellen
+            const availableRoles = allRoles.filter(role => !userRoles.includes(role));
+            let roleOptions = '';
+
+            if (availableRoles.length > 0) {
+                availableRoles.forEach(role => {
+                    roleOptions += `<option value="${role}">${role}</option>`;
+                });
+            } else {
+                roleOptions = '<option disabled>Keine weiteren Rollen verfügbar</option>';
+            }
+
+            // Aktuelle Rollen-Liste erstellen
+            let currentRolesHtml = '';
+            if (userRoles.length > 0) {
+                currentRolesHtml = '<div class="mb-3"><h6>Aktuelle Rollen:</h6>';
+                userRoles.forEach(role => {
+                    currentRolesHtml += `
+                        <div class="mb-2 d-flex justify-content-between align-items-center bg-light p-2 rounded">
+                            <span>${role}</span>
+                            <button type="button" class="btn btn-danger btn-sm"
+                                    onclick="confirmRemoveRole('${userId}', '${role}', '${email}')">
+                                <i class="fas fa-trash-alt"></i> Entfernen
+                            </button>
+                        </div>
+                    `;
+                });
+                currentRolesHtml += '</div>';
+            }
+
+            Swal.fire({
+                title: `Rollen für ${email}`,
+                html: `
+                    ${currentRolesHtml}
+                    <form id="addRoleFormPopup" class="mt-3">
+                        <h6>Neue Rolle hinzufügen:</h6>
+                        <div class="input-group">
+                            <select id="roleSelect" class="form-control">
+                                ${roleOptions}
+                            </select>
+                            <button type="button" class="btn btn-success"
+                                    onclick="addRole('${userId}')"
+                                    ${availableRoles.length === 0 ? 'disabled' : ''}>
+                                <i class="fas fa-plus"></i> Hinzufügen
+                            </button>
+                        </div>
+                    </form>
+                `,
+                width: '500px',
+                showCloseButton: true,
+                showCancelButton: false,
+                focusConfirm: false,
+                confirmButtonText: 'Schließen'
+            });
+        }
+
+        /**
+         * Fügt eine Rolle zum Benutzer hinzu
+         */
+        function addRole(userId) {
+            const roleSelect = document.getElementById('roleSelect');
+            const selectedRole = roleSelect.value;
+
+            if (selectedRole) {
+                document.getElementById('addUserId').value = userId;
+                document.getElementById('addRole').value = selectedRole;
+                document.getElementById('addRoleForm').submit();
+            }
+        }
+    </script>
+}
