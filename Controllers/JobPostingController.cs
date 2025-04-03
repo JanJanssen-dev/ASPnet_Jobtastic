@@ -3,6 +3,7 @@ using ASPnet_Jobtastic.Data;
 using ASPnet_Jobtastic.Models;
 using ASPnet_Jobtastic.Models.ViewModels;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,19 +15,22 @@ namespace ASPnet_Jobtastic.Controllers
         private readonly ApplicationDbContext _context;
         private readonly ILogger<JobPostingController> _logger;
         private readonly JobPostingAuthorizationHelper _authHelper;
+        private readonly UserManager<IdentityUser> _userManager;
 
         public JobPostingController(
             ApplicationDbContext context,
             ILogger<JobPostingController> logger,
-            JobPostingAuthorizationHelper authHelper)
+            JobPostingAuthorizationHelper authHelper,
+            UserManager<IdentityUser> userManager)
         {
             _context = context;
             _logger = logger;
             _authHelper = authHelper;
+            _userManager = userManager;
         }
 
         // Übersicht aller JobPostings des eingeloggten Users
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
             var username = User.Identity?.Name;
             if (string.IsNullOrEmpty(username))
@@ -34,20 +38,42 @@ namespace ASPnet_Jobtastic.Controllers
                 return RedirectToAction("Login", "Account", new { area = "Identity" });
             }
 
+            // Prüfe, ob Benutzer Admin ist
+            var user = await _userManager.FindByNameAsync(username);
+            bool isAdmin = user != null && await _userManager.IsInRoleAsync(user, "Admin");
+
             // Eigene Postings
             var ownedJobPostings = _context.JobPostings
                 .Where(x => x.OwnerUsername == username)
                 .ToList();
 
+            // Setze Eigenschaften für eigene Jobs
+            foreach (var job in ownedJobPostings)
+            {
+                job.IsOwner = true;
+                job.IsAdmin = isAdmin;
+                job.CanEdit = true;
+                job.CanDelete = true;
+            }
+
             // Freigaben anderer Benutzer
             var sharedJobPostingIds = _context.JobSharings
                 .Where(x => x.SharedUsername == username)
-                .Select(x => x.JobPostingId)
                 .ToList();
 
-            var sharedJobPostings = _context.JobPostings
-                .Where(x => sharedJobPostingIds.Contains(x.Id))
-                .ToList();
+            var sharedJobPostings = new List<JobPostingModel>();
+            foreach (var sharing in sharedJobPostingIds)
+            {
+                var job = await _context.JobPostings.FindAsync(sharing.JobPostingId);
+                if (job != null)
+                {
+                    job.IsOwner = false;
+                    job.IsAdmin = isAdmin;
+                    job.CanEdit = sharing.CanEdit;
+                    job.CanDelete = sharing.CanDelete;
+                    sharedJobPostings.Add(job);
+                }
+            }
 
             // Beide Listen zusammenführen
             var allJobPostings = ownedJobPostings
@@ -171,6 +197,9 @@ namespace ASPnet_Jobtastic.Controllers
                 return BadRequest();
             }
 
+            // Den Kontext für das existierende JobPosting löschen, um Tracking-Konflikte zu vermeiden
+            _context.ChangeTracker.Clear();
+
             var existingJob = await _context.JobPostings.AsNoTracking().FirstOrDefaultAsync(j => j.Id == id);
             if (existingJob == null)
             {
@@ -230,8 +259,10 @@ namespace ASPnet_Jobtastic.Controllers
             {
                 try
                 {
-                    _context.Update(jobPostingModel);
-                    _context.SaveChanges();
+                    // Wir fügen das Entity als "Modified" hinzu, nachdem wir den Tracker geleert haben
+                    _context.JobPostings.Update(jobPostingModel);
+                    await _context.SaveChangesAsync();
+
                     _logger.LogInformation("JobPosting aktualisiert: {JobId} von {Username}", id, User.Identity?.Name);
                     return RedirectToAction(nameof(Index));
                 }

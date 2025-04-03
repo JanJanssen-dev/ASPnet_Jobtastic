@@ -1,4 +1,6 @@
-﻿namespace ASPnet_Jobtastic.Models
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace ASPnet_Jobtastic.Models
 {
     public class JobPostingModel
     {
@@ -18,5 +20,17 @@
         public DateTime? ChangeDate { get; set; }
         public string? ChangeUserName {  get; set; } = string.Empty;
         public string[]? AllowedUserNames { get; set; }
+
+        [NotMapped]
+        public bool IsOwner { get; set; }
+
+        [NotMapped]
+        public bool IsAdmin { get; set; }
+
+        [NotMapped]
+        public bool CanEdit { get; set; }
+
+        [NotMapped]
+        public bool CanDelete { get; set; }
     }
 }

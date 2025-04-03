@@ -26,9 +26,9 @@ namespace ASPnet_Jobtastic.Authorization
         }
 
         protected override async Task HandleRequirementAsync(
-            AuthorizationHandlerContext context,
-            JobPostingAuthorizationRequirement requirement,
-            int jobId)
+    AuthorizationHandlerContext context,
+    JobPostingAuthorizationRequirement requirement,
+    int jobId)
         {
             // Benutzer abrufen
             var user = await _userManager.GetUserAsync(context.User);
@@ -62,7 +62,15 @@ namespace ASPnet_Jobtastic.Authorization
                 return;
             }
 
-            // Für alle anderen Operationen außer View, müssen wir die Freigaben prüfen
+            // ManageSharing ist eine spezielle Operation, die nur dem Eigentümer erlaubt ist
+            if (requirement.Operation == JobPostingOperations.ManageSharing)
+            {
+                // Da wir bereits überprüft haben, dass der aktuelle Benutzer nicht der Eigentümer ist,
+                // verweigern wir den Zugriff für ManageSharing
+                return; // Zugriff verweigert
+            }
+
+            // Für View-Operation, prüfen wir nur, ob eine Freigabe existiert
             if (requirement.Operation == JobPostingOperations.View)
             {
                 // Bei View prüfen wir nur, ob eine Freigabe existiert
@@ -76,7 +84,7 @@ namespace ASPnet_Jobtastic.Authorization
                 return;
             }
 
-            // Für Edit, Delete oder ManageSharing müssen spezifische Berechtigungen geprüft werden
+            // Für Edit, Delete müssen spezifische Berechtigungen geprüft werden
             var sharing = await _context.JobSharings
                 .FirstOrDefaultAsync(js => js.JobPostingId == jobId && js.SharedUsername == username);
 
@@ -100,10 +108,6 @@ namespace ASPnet_Jobtastic.Authorization
                     {
                         context.Succeed(requirement);
                     }
-                    break;
-
-                case var op when op == JobPostingOperations.ManageSharing:
-                    // Nur der Eigentümer darf Freigaben verwalten, was bereits oben geprüft wurde
                     break;
             }
         }

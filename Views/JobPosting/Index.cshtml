@@ -1,4 +1,5 @@
 ﻿@model List<JobPostingModel>
+
 @{
     ViewData["Title"] = "Deine Inserate";
 }
@@ -55,11 +56,25 @@
                         </td>
                         <td class="align-middle">
                             <div class="btn-group" role="group">
-                                <a asp-action="EditJob" asp-route-id="@item.Id" class="btn btn-primary btn-sm">Bearbeiten</a>
-                                <a asp-action="ManageSharing" asp-route-id="@item.Id" class="btn btn-info btn-sm">Freigeben</a>
-                                <form asp-action="DeleteJob" asp-route-id="@item.Id" method="post" id="deleteForm-@item.Id">
-                                    <button type="button" class="btn btn-danger btn-sm" onclick="confirmDelete(@item.Id, '@item.JobTitle')">Löschen</button>
-                                </form>
+                                <!-- Bearbeiten-Button für alle mit Bearbeitungsrecht -->
+                                @if (item.IsOwner || item.IsAdmin || item.CanEdit)
+                                {
+                                    <a asp-action="EditJob" asp-route-id="@item.Id" class="btn btn-primary btn-sm">Bearbeiten</a>
+                                }
+
+                                <!-- Freigeben-Button nur für Eigentümer oder Admins -->
+                                @if (item.IsOwner || item.IsAdmin)
+                                {
+                                    <a asp-action="ManageSharing" asp-route-id="@item.Id" class="btn btn-info btn-sm">Freigeben</a>
+                                }
+
+                                <!-- Löschen-Button für Eigentümer, Admins oder Benutzer mit Löschberechtigung -->
+                                @if (item.IsOwner || item.IsAdmin || item.CanDelete)
+                                {
+                                    <form asp-action="DeleteJob" asp-route-id="@item.Id" method="post" id="deleteForm-@item.Id">
+                                        <button type="button" class="btn btn-danger btn-sm" onclick="confirmDelete(@item.Id, '@item.JobTitle')">Löschen</button>
+                                    </form>
+                                }
                             </div>
                         </td>
                     </tr>
