@@ -2,93 +2,201 @@
 
 @{
     ViewData["Title"] = "Deine Inserate";
+
+    // Jobs in eigene und freigegebene aufteilen
+    var ownedJobs = Model.Where(j => j.IsOwner).ToList();
+    var sharedJobs = Model.Where(j => !j.IsOwner).ToList();
 }
+
+@* Hauptcontainer für die gesamte Seite *@
 <section class="p-4 bg-light rounded shadow-sm">
+    @* Header-Bereich mit Titel *@
     <div class="mt-6 p-5 bg-primary text-white rounded text-center">
         <h2>Deine Inserate</h2>
     </div>
-    <div class="text-end">
-        <a class="mt-3 btn btn-outline-primary" asp-controller="JobPosting" asp-action="CreateJob">neuen Job anlegen</a>
+
+    @* Button zum Erstellen eines neuen Jobs (oberer Button) *@
+    <div class="text-end mb-3">
+        <a class="btn btn-outline-primary" asp-controller="JobPosting" asp-action="CreateJob">Neuen Job anlegen</a>
     </div>
+
+    @* #region EIGENE JOBS *@
     <section class="mt-3 p-4 bg-light rounded shadow-sm">
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Logo</th>
-                    <th>Job Titel</th>
-                    <th>Company</th>
-                    <th>ASP</th>
-                    <th>Start am</th>
-                    <th>Erstellt am</th>
-                    <th>Letzte Änderung</th>
-                    <th>Aktionen</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var item in Model)
-                {
+        <h3 class="mb-3">Deine erstellten Jobs</h3>
+        @if (ownedJobs.Any())
+        {
+            @* Tabelle für eigene Jobangebote *@
+            <table class="table table-striped">
+                <thead>
                     <tr>
-                        <td>
-                            @if (item.CompanyImage != null && item.CompanyImage.Length > 0)
-                            {
-                                var base64 = Convert.ToBase64String(item.CompanyImage);
-                                <img src="data:image/png;base64,@base64" alt="Logo" style="max-width: 80px; max-height: 40px;" />
-                            }
-                        </td>
-                        <td class="align-middle">@item.JobTitle</td>
-                        <td class="align-middle">@item.CompanyName</td>
-                        <td class="align-middle">@item.ContactName</td>
-                        <td class="align-middle">@item.StartDate.ToShortDateString()</td>
-                        <td class="align-middle">
-                            @if (item.CreationDate.HasValue)
-                            {
-                                @item.CreationDate.Value.ToShortDateString()
-                            }
-                        </td>
-                        <td class="align-middle">
-                            @if (item.ChangeDate.HasValue)
-                            {
-                                <small>
-                                    @item.ChangeDate.Value.ToShortDateString()
-                                    <br />von @item.ChangeUserName
-                                </small>
-                            }
-                        </td>
-                        <td class="align-middle">
-                            <div class="btn-group" role="group">
-                                <!-- Bearbeiten-Button für alle mit Bearbeitungsrecht -->
-                                @if (item.IsOwner || item.IsAdmin || item.CanEdit)
+                        <th>Logo</th>
+                        <th>Job Titel</th>
+                        <th>Company</th>
+                        <th>ASP</th>
+                        <th>Start am</th>
+                        <th>Erstellt am</th>
+                        <th>Letzte Änderung</th>
+                        <th>Aktionen</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in ownedJobs)
+                    {
+                        <tr>
+                            @* Unternehmenslogo aus der Datenbank anzeigen *@
+                            <td>
+                                @if (item.CompanyImage != null && item.CompanyImage.Length > 0)
                                 {
+                                    var base64 = Convert.ToBase64String(item.CompanyImage);
+                                    <img src="data:image/png;base64,@base64" alt="Logo" style="max-width: 80px; max-height: 40px;" />
+                                }
+                            </td>
+                            <td class="align-middle">@item.JobTitle</td>
+                            <td class="align-middle">@item.CompanyName</td>
+                            <td class="align-middle">@item.ContactName</td>
+                            <td class="align-middle">@item.StartDate.ToShortDateString()</td>
+                            <td class="align-middle">
+                                @if (item.CreationDate.HasValue)
+                                {
+                                    @item.CreationDate.Value.ToShortDateString()
+                                }
+                            </td>
+                            <td class="align-middle">
+                                @if (item.ChangeDate.HasValue)
+                                {
+                                    <small>
+                                        @item.ChangeDate.Value.ToShortDateString()
+                                        <br />von @item.ChangeUserName
+                                    </small>
+                                }
+                            </td>
+                            @* Aktions-Buttons für eigene Jobs (alle Rechte) *@
+                            <td class="align-middle">
+                                <div class="btn-group" role="group">
+                                    @* Bearbeitungs-Button *@
                                     <a asp-action="EditJob" asp-route-id="@item.Id" class="btn btn-primary btn-sm">Bearbeiten</a>
-                                }
 
-                                <!-- Freigeben-Button nur für Eigentümer oder Admins -->
-                                @if (item.IsOwner || item.IsAdmin)
-                                {
+                                    @* Freigabe-Button (nur bei eigenen Jobs) *@
                                     <a asp-action="ManageSharing" asp-route-id="@item.Id" class="btn btn-info btn-sm">Freigeben</a>
-                                }
 
-                                <!-- Löschen-Button für Eigentümer, Admins oder Benutzer mit Löschberechtigung -->
-                                @if (item.IsOwner || item.IsAdmin || item.CanDelete)
-                                {
+                                    @* Lösch-Button mit Bestätigungsdialog *@
                                     <form asp-action="DeleteJob" asp-route-id="@item.Id" method="post" id="deleteForm-@item.Id">
                                         <button type="button" class="btn btn-danger btn-sm" onclick="confirmDelete(@item.Id, '@item.JobTitle')">Löschen</button>
                                     </form>
-                                }
-                            </div>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            @* Info-Meldung, wenn keine eigenen Jobs vorhanden sind *@
+            <div class="alert alert-info">
+                Du hast noch keine eigenen Jobangebote erstellt.
+                <a asp-controller="JobPosting" asp-action="CreateJob">Erstelle jetzt dein erstes Jobangebot</a>
+            </div>
+        }
     </section>
-    <div class="text-end">
-        <a class="mt-3 btn btn-outline-primary" asp-controller="JobPosting" asp-action="CreateJob">neuen Job anlegen</a>
+    @* #endregion EIGENE JOBS *@
+
+    @* #region FREIGEGEBENE JOBS *@
+    <section class="mt-4 p-4 bg-light rounded shadow-sm">
+        <h3 class="mb-3">Für dich freigegebene Jobs</h3>
+        @if (sharedJobs.Any())
+        {
+            @* Tabelle für freigegebene Jobangebote *@
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Logo</th>
+                        <th>Job Titel</th>
+                        <th>Company</th>
+                        <th>ASP</th>
+                        <th>Start am</th>
+                        <th>Erstellt am</th>
+                        <th>Freigegeben von</th>
+                        <th>Aktionen</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in sharedJobs)
+                    {
+                        <tr>
+                            @* Unternehmenslogo aus der Datenbank anzeigen *@
+                            <td>
+                                @if (item.CompanyImage != null && item.CompanyImage.Length > 0)
+                                {
+                                    var base64 = Convert.ToBase64String(item.CompanyImage);
+                                    <img src="data:image/png;base64,@base64" alt="Logo" style="max-width: 80px; max-height: 40px;" />
+                                }
+                            </td>
+                            <td class="align-middle">@item.JobTitle</td>
+                            <td class="align-middle">@item.CompanyName</td>
+                            <td class="align-middle">@item.ContactName</td>
+                            <td class="align-middle">@item.StartDate.ToShortDateString()</td>
+                            <td class="align-middle">
+                                @if (item.CreationDate.HasValue)
+                                {
+                                    @item.CreationDate.Value.ToShortDateString()
+                                }
+                            </td>
+                            @* Eigentümer des Jobs bei freigegebenen Jobs anzeigen *@
+                            <td class="align-middle">@item.OwnerUsername</td>
+                            @* Aktions-Buttons abhängig von den Berechtigungen anzeigen *@
+                            <td class="align-middle">
+                                <div class="btn-group" role="group">
+                                    @* Bearbeitungs-Button nur anzeigen, wenn Berechtigung vorhanden *@
+                                    @if (item.CanEdit)
+                                    {
+                                        <a asp-action="EditJob" asp-route-id="@item.Id" class="btn btn-primary btn-sm">Bearbeiten</a>
+                                    }
+                                    @* Lösch-Button nur anzeigen, wenn Berechtigung vorhanden *@
+                                    @if (item.CanDelete)
+                                    {
+                                        <form asp-action="DeleteJob" asp-route-id="@item.Id" method="post" id="deleteForm-@item.Id">
+                                            <button type="button" class="btn btn-danger btn-sm" onclick="confirmDelete(@item.Id, '@item.JobTitle')">Löschen</button>
+                                        </form>
+                                    }
+                                    @* "Nur Leserechte"-Badge anzeigen, wenn keine Bearbeitungs- oder Löschrechte vorhanden *@
+                                    @if (!item.CanEdit && !item.CanDelete)
+                                    {
+                                        <span class="badge bg-secondary">Nur Leserechte</span>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            @* Info-Meldung, wenn keine freigegebenen Jobs vorhanden sind *@
+            <div class="alert alert-info">
+                Es wurden keine Jobs für dich freigegeben.
+            </div>
+        }
+    </section>
+    @* #endregion FREIGEGEBENE JOBS *@
+
+    @* Button zum Erstellen eines neuen Jobs (unterer Button) *@
+    <div class="text-end mt-3">
+        <a class="btn btn-outline-primary" asp-controller="JobPosting" asp-action="CreateJob">Neuen Job anlegen</a>
     </div>
 </section>
 
+@* #region JAVASCRIPT *@
 @section Scripts {
+    @* JavaScript-Funktion zur Bestätigung des Löschvorgangs *@
     <script>
+        /**
+         * Zeigt einen Bestätigungsdialog an, bevor ein Job gelöscht wird
+         * Parameter:
+         * - id: Die ID des zu löschenden Jobs
+         * - jobTitle: Der Titel des Jobs für die Anzeige im Dialog
+         */
         function confirmDelete(id, jobTitle) {
             Swal.fire({
                 title: "Bist du sicher?",
@@ -107,7 +215,7 @@
                     // Erfolgsmeldung (wird angezeigt, wenn das Formular gesendet wurde)
                     Swal.fire({
                         title: "Gelöscht!",
-                        text: "Dein Job wurde erfolgreich gelöscht.",
+                        text: "Der Job wurde erfolgreich gelöscht.",
                         icon: "success",
                         timer: 2000,
                         showConfirmButton: false
@@ -117,3 +225,4 @@
         }
     </script>
 }
+@* #endregion JAVASCRIPT *@

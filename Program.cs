@@ -14,7 +14,7 @@ builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 //wenn true wird Mail versendet zu Auth
 builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = false)
-    .AddRoles<IdentityRole>() // Rollen-Support hinzufügen
+    .AddRoles<IdentityRole>() // Rollen-Support hinzufï¿½gen
     .AddEntityFrameworkStores<ApplicationDbContext>();
 builder.Services.AddControllersWithViews();
 
@@ -29,7 +29,7 @@ builder.Services.Configure<IdentityOptions>(options =>
     options.Password.RequiredUniqueChars = 0;
 });
 
-// Authorization Services hinzufügen
+// Authorization Services hinzufï¿½gen
 builder.Services.AddAuthorization(options => {
     // Keine FallbackPolicy setzen - Standardverhalten beibehalten
 });
@@ -41,6 +41,23 @@ builder.Services.AddScoped<IAuthorizationHandler, JobPostingAuthorizationHandler
 builder.Services.AddScoped<JobPostingAuthorizationHelper>();
 
 var app = builder.Build();
+
+//Rollen Management
+using (var scope = app.Services.CreateScope())
+{
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+
+    string[] roles = new[] { "Administrator", "User", "Moderator", "Support" };
+
+    foreach (var role in roles)
+    {
+        if (!await roleManager.RoleExistsAsync(role))
+        {
+            await roleManager.CreateAsync(new IdentityRole(role));
+        }
+    }
+}
+
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

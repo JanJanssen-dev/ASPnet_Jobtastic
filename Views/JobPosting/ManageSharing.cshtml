@@ -96,11 +96,19 @@
                                         }
                                     </td>
                                     <td>
-                                        <form asp-action="RemoveSharing" asp-route-id="@share.Id" method="post"
-                                              onsubmit="return confirm('Möchten Sie diese Freigabe wirklich entfernen?');">
-                                            @Html.AntiForgeryToken()
-                                            <button type="submit" class="btn btn-danger btn-sm">Entfernen</button>
-                                        </form>
+                                        <div class="btn-group" role="group">
+                                            <button type="button" class="btn btn-primary btn-sm"
+                                                    onclick="openEditModal(@share.Id, '@share.SharedUsername', @share.CanEdit.ToString().ToLower(), @share.CanDelete.ToString().ToLower())">
+                                                Bearbeiten
+                                            </button>
+                                            <form asp-action="RemoveSharing" asp-route-id="@share.Id" method="post" id="removeForm-@share.Id">
+                                                @Html.AntiForgeryToken()
+                                                <button type="button" class="btn btn-danger btn-sm"
+                                                        onclick="confirmRemoveSharing(@share.Id, '@share.SharedUsername')">
+                                                    Entfernen
+                                                </button>
+                                            </form>
+                                        </div>
                                     </td>
                                 </tr>
                             }
@@ -118,10 +126,88 @@
     <div class="mt-4 text-end">
         <a asp-action="Index" class="btn btn-secondary">Zurück zur Übersicht</a>
     </div>
-
-    @section Scripts {
-        @{
-            await Html.RenderPartialAsync("_ValidationScriptsPartial");
-        }
-    }
 </section>
+
+<!-- Modal für die Bearbeitung von Freigaben -->
+<div class="modal fade" id="editSharingModal" tabindex="-1" aria-labelledby="editSharingModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="UpdateSharing" method="post" id="editSharingForm">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="Id" id="editSharingId" />
+                <input type="hidden" name="JobPostingId" value="@Model.JobPosting.Id" />
+
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editSharingModalLabel">Freigabe bearbeiten</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Benutzername</label>
+                        <input type="text" class="form-control" id="editSharingUsername" disabled />
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="editCanEdit" name="CanEdit" value="true" />
+                        <input type="hidden" name="CanEdit" value="false" />
+                        <label class="form-check-label" for="editCanEdit">Bearbeiten erlauben</label>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="editCanDelete" name="CanDelete" value="true" />
+                        <input type="hidden" name="CanDelete" value="false" />
+                        <label class="form-check-label" for="editCanDelete">Löschen erlauben</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                    <button type="submit" class="btn btn-primary">Speichern</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        function confirmRemoveSharing(id, username) {
+            Swal.fire({
+                title: "Freigabe entfernen?",
+                text: `Möchtest du die Freigabe für "${username}" wirklich entfernen?`,
+                icon: "question",
+                showCancelButton: true,
+                confirmButtonColor: "#d33",
+                cancelButtonColor: "#3085d6",
+                confirmButtonText: "Ja, entfernen!",
+                cancelButtonText: "Abbrechen"
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Formular absenden, wenn Benutzer bestätigt
+                    document.getElementById(`removeForm-${id}`).submit();
+
+                    // Erfolgsmeldung
+                    Swal.fire({
+                        title: "Entfernt!",
+                        text: "Die Freigabe wurde erfolgreich entfernt.",
+                        icon: "success",
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                }
+            });
+        }
+
+        function openEditModal(id, username, canEdit, canDelete) {
+            document.getElementById('editSharingId').value = id;
+            document.getElementById('editSharingUsername').value = username;
+            document.getElementById('editCanEdit').checked = canEdit;
+            document.getElementById('editCanDelete').checked = canDelete;
+
+            // Modal öffnen
+            var modal = new bootstrap.Modal(document.getElementById('editSharingModal'));
+            modal.show();
+        }
+    </script>
+}
