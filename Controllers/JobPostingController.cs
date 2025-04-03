@@ -406,6 +406,33 @@ namespace ASPnet_Jobtastic.Controllers
             return RedirectToAction(nameof(ManageSharing), new { id = jobId });
         }
 
+        // POST: Bearbeiten einer bestehenden Freigabe
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateSharing(int Id, int JobPostingId, bool CanEdit, bool CanDelete)
+        {
+            var sharing = await _context.JobSharings.FindAsync(Id);
+            if (sharing == null)
+            {
+                return NotFound();
+            }
+
+            // Autorisierung prüfen - nur der Eigentümer darf Freigaben verwalten
+            var authResult = await _authHelper.AuthorizeJobPostingAsync(User, this, JobPostingId, JobPostingOperations.ManageSharing);
+            if (authResult != null)
+            {
+                return authResult;
+            }
+
+            // Berechtigungen aktualisieren (null bedeutet, dass die Checkbox nicht angekreuzt war)
+            sharing.CanEdit = CanEdit;
+            sharing.CanDelete = CanDelete;
+
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(ManageSharing), new { id = JobPostingId });
+        }
+
         // POST: Freigabe löschen
         [HttpPost]
         [ValidateAntiForgeryToken]
