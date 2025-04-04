@@ -48,7 +48,6 @@ namespace ASPnet_Jobtastic.Controllers
             // Eigene Postings
             var ownedJobPostings = await _context.JobPostings
                 .Where(x => x.OwnerUsername == username)
-                .AsNoTracking() // Verwende AsNoTracking() für reine Leseoperationen
                 .ToListAsync();
 
             // Setze Eigenschaften für eigene Jobs
@@ -69,7 +68,6 @@ namespace ASPnet_Jobtastic.Controllers
 
             var sharedJobPostings = await _context.JobPostings
                 .Where(j => sharedJobPostingIds.Contains(j.Id))
-                .AsNoTracking()
                 .ToListAsync();
 
             foreach (var job in sharedJobPostings)
@@ -88,7 +86,6 @@ namespace ASPnet_Jobtastic.Controllers
 
                 var adminJobs = await _context.JobPostings
                     .Where(j => !existingJobIds.Contains(j.Id))
-                    .AsNoTracking() // Verwende AsNoTracking() für reine Leseoperationen
                     .ToListAsync();
 
                 foreach (var job in adminJobs)
@@ -199,7 +196,7 @@ namespace ASPnet_Jobtastic.Controllers
                 return authResult;
             }
 
-            var job = await _context.JobPostings.FindAsync(id); // Keine Verwendung von AsNoTracking()
+            var job = await _context.JobPostings.FindAsync(id);
             if (job == null)
             {
                 return NotFound();
@@ -228,7 +225,7 @@ namespace ASPnet_Jobtastic.Controllers
             // Den Kontext für das existierende JobPosting löschen, um Tracking-Konflikte zu vermeiden
             _context.ChangeTracker.Clear();
 
-            var existingJob = await _context.JobPostings.AsNoTracking().FirstOrDefaultAsync(j => j.Id == id);
+            var existingJob = await _context.JobPostings.FirstOrDefaultAsync(j => j.Id == id);
             if (existingJob == null)
             {
                 return NotFound();
@@ -331,7 +328,7 @@ namespace ASPnet_Jobtastic.Controllers
                 return authResult;
             }
 
-            var job = await _context.JobPostings.FindAsync(id); // Keine Verwendung von AsNoTracking()
+            var job = await _context.JobPostings.FindAsync(id);
             if (job == null)
             {
                 return NotFound();
@@ -376,7 +373,7 @@ namespace ASPnet_Jobtastic.Controllers
                 return authResult;
             }
 
-            var job = await _context.JobPostings.FindAsync(id); // Keine Verwendung von AsNoTracking()
+            var job = await _context.JobPostings.FindAsync(id); 
             if (job == null)
             {
                 return NotFound();
@@ -385,13 +382,12 @@ namespace ASPnet_Jobtastic.Controllers
             // Lade alle bestehenden Freigaben
             var sharings = await _context.JobSharings
                 .Where(js => js.JobPostingId == id)
-                .AsNoTracking() // Verwende AsNoTracking() für reine Leseoperationen
                 .ToListAsync();
 
             var viewModel = new JobSharingViewModel
             {
                 JobPosting = job,
-                ExistingShares = sharings,
+                ExistingShares = sharings ?? new List<JobSharingModel>(), //zusätzliche NULL prüfung
                 NewShare = new JobSharingModel { JobPostingId = id }
             };
 

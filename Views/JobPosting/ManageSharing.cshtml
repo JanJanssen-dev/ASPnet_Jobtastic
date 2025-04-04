@@ -58,7 +58,7 @@
                 <h4>Bestehende Freigaben</h4>
             </div>
             <div class="card-body">
-                @if (Model.ExistingShares.Any())
+                @if (Model.ExistingShares != null && Model.ExistingShares.Any())
                 {
                     <table class="table table-striped">
                         <thead>
@@ -97,10 +97,10 @@
                                     </td>
                                     <td>
                                         <div class="btn-group" role="group">
-                                            <button type="button" class="btn btn-primary btn-sm"
-                                                    onclick="openEditModal(@share.Id, '@share.SharedUsername', @share.CanEdit.ToString().ToLower(), @share.CanDelete.ToString().ToLower())">
-                                                Bearbeiten
-                                            </button>
+                                        <button type="button" class="btn btn-primary btn-sm"
+                                                onclick="openEditModal(@share.Id, '@share.SharedUsername', @(share.CanEdit ? "true" : "false"), @(share.CanDelete ? "true" : "false"))">
+                                            Bearbeiten
+                                        </button>
                                             <form asp-action="RemoveSharing" asp-route-id="@share.Id" method="post" id="removeForm-@share.Id">
                                                 @Html.AntiForgeryToken()
                                                 <button type="button" class="btn btn-danger btn-sm"
@@ -109,6 +109,7 @@
                                                 </button>
                                             </form>
                                         </div>
+
                                     </td>
                                 </tr>
                             }
