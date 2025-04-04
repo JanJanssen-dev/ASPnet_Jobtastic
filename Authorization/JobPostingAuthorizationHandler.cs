@@ -40,7 +40,7 @@ namespace ASPnet_Jobtastic.Authorization
             var username = user.UserName;
 
             // Überprüfen, ob der Benutzer Admin ist (für zukünftige Rollenerweiterung)
-            var isAdmin = await _userManager.IsInRoleAsync(user, "Admin");
+            var isAdmin = await _userManager.IsInRoleAsync(user, "Administrator");
             if (isAdmin)
             {
                 context.Succeed(requirement);
@@ -56,7 +56,7 @@ namespace ASPnet_Jobtastic.Authorization
             }
 
             // Wenn der Benutzer der Eigentümer ist, hat er alle Rechte
-            if (jobPosting.OwnerUsername == username)
+            if (jobPosting.OwnerUsername == username || isAdmin == true)
             {
                 context.Succeed(requirement);
                 return;
@@ -86,7 +86,7 @@ namespace ASPnet_Jobtastic.Authorization
 
             // Für Edit, Delete müssen spezifische Berechtigungen geprüft werden
             var sharing = await _context.JobSharings
-                .FirstOrDefaultAsync(js => js.JobPostingId == jobId && js.SharedUsername == username);
+                .FirstOrDefaultAsync(js => js.JobPostingId == jobId && (js.SharedUsername == username || isAdmin == true));
 
             if (sharing == null)
             {

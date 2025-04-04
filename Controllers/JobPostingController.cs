@@ -29,7 +29,7 @@ namespace ASPnet_Jobtastic.Controllers
             _userManager = userManager;
         }
 
-        // Übersicht aller JobPostings des eingeloggten Users
+        // Übersicht aller JobPostings
         public async Task<IActionResult> Index()
         {
             var username = User.Identity?.Name;
@@ -40,46 +40,67 @@ namespace ASPnet_Jobtastic.Controllers
 
             // Prüfe, ob Benutzer Admin ist
             var user = await _userManager.FindByNameAsync(username);
-            bool isAdmin = user != null && await _userManager.IsInRoleAsync(user, "Admin");
+            bool isAdmin = user != null && await _userManager.IsInRoleAsync(user, "Administrator");
 
-            // Eigene Postings
-            var ownedJobPostings = _context.JobPostings
-                .Where(x => x.OwnerUsername == username)
-                .ToList();
+            List<JobPostingModel> allJobPostings;
 
-            // Setze Eigenschaften für eigene Jobs
-            foreach (var job in ownedJobPostings)
+            if (isAdmin)
             {
-                job.IsOwner = true;
-                job.IsAdmin = isAdmin;
-                job.CanEdit = true;
-                job.CanDelete = true;
-            }
+                // Für Admins: Alle JobPostings aus der Datenbank laden
+                allJobPostings = await _context.JobPostings
+                    .ToListAsync();
 
-            // Freigaben anderer Benutzer
-            var sharedJobPostingIds = _context.JobSharings
-                .Where(x => x.SharedUsername == username)
-                .ToList();
-
-            var sharedJobPostings = new List<JobPostingModel>();
-            foreach (var sharing in sharedJobPostingIds)
-            {
-                var job = await _context.JobPostings.FindAsync(sharing.JobPostingId);
-                if (job != null)
+                // Setze Eigenschaften für Admin-Zugriff
+                foreach (var job in allJobPostings)
                 {
-                    job.IsOwner = false;
-                    job.IsAdmin = isAdmin;
-                    job.CanEdit = sharing.CanEdit;
-                    job.CanDelete = sharing.CanDelete;
-                    sharedJobPostings.Add(job);
+                    job.IsOwner = job.OwnerUsername == username;
+                    job.IsAdmin = true;
+                    job.CanEdit = true;    // Admins können alle Jobs bearbeiten
+                    job.CanDelete = true;  // Admins können alle Jobs löschen
                 }
             }
+            else
+            {
+                // Für normale Benutzer: Nur eigene und geteilte JobPostings laden
+                // Eigene Postings
+                var ownedJobPostings = _context.JobPostings
+                    .Where(x => x.OwnerUsername == username)
+                    .ToList();
 
-            // Beide Listen zusammenführen
-            var allJobPostings = ownedJobPostings
-                .Concat(sharedJobPostings)
-                .OrderBy(x => x.CreationDate)
-                .ToList();
+                // Setze Eigenschaften für eigene Jobs
+                foreach (var job in ownedJobPostings)
+                {
+                    job.IsOwner = true;
+                    job.IsAdmin = false;
+                    job.CanEdit = true;
+                    job.CanDelete = true;
+                }
+
+                // Freigaben anderer Benutzer
+                var sharedJobPostingIds = _context.JobSharings
+                    .Where(x => x.SharedUsername == username)
+                    .ToList();
+
+                var sharedJobPostings = new List<JobPostingModel>();
+                foreach (var sharing in sharedJobPostingIds)
+                {
+                    var job = await _context.JobPostings.FindAsync(sharing.JobPostingId);
+                    if (job != null)
+                    {
+                        job.IsOwner = false;
+                        job.IsAdmin = false;
+                        job.CanEdit = sharing.CanEdit;
+                        job.CanDelete = sharing.CanDelete;
+                        sharedJobPostings.Add(job);
+                    }
+                }
+
+                // Beide Listen zusammenführen
+                allJobPostings = ownedJobPostings
+                    .Concat(sharedJobPostings)
+                    .OrderBy(x => x.CreationDate)
+                    .ToList();
+            }
 
             return View(allJobPostings);
         }
