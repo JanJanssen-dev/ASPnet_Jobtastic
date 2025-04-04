@@ -48,6 +48,7 @@ namespace ASPnet_Jobtastic.Controllers
             // Eigene Postings
             var ownedJobPostings = await _context.JobPostings
                 .Where(x => x.OwnerUsername == username)
+                .AsNoTracking() // Verwende AsNoTracking() für reine Leseoperationen
                 .ToListAsync();
 
             // Setze Eigenschaften für eigene Jobs
@@ -63,19 +64,21 @@ namespace ASPnet_Jobtastic.Controllers
             // Freigaben anderer Benutzer
             var sharedJobPostingIds = await _context.JobSharings
                 .Where(x => x.SharedUsername == username)
+                .Select(x => x.JobPostingId)
                 .ToListAsync();
 
-            foreach (var sharing in sharedJobPostingIds)
+            var sharedJobPostings = await _context.JobPostings
+                .Where(j => sharedJobPostingIds.Contains(j.Id))
+                .AsNoTracking()
+                .ToListAsync();
+
+            foreach (var job in sharedJobPostings)
             {
-                var job = await _context.JobPostings.FindAsync(sharing.JobPostingId);
-                if (job != null)
-                {
-                    job.IsOwner = false;
-                    job.IsAdmin = isAdmin;
-                    job.CanEdit = sharing.CanEdit;
-                    job.CanDelete = sharing.CanDelete;
-                    allJobPostings.Add(job);
-                }
+                job.IsOwner = false;
+                job.IsAdmin = isAdmin;
+                job.CanEdit = true;
+                job.CanDelete = true;
+                allJobPostings.Add(job);
             }
 
             // Wenn Admin und showAllJobs ist true, füge alle anderen Jobs hinzu
@@ -85,6 +88,7 @@ namespace ASPnet_Jobtastic.Controllers
 
                 var adminJobs = await _context.JobPostings
                     .Where(j => !existingJobIds.Contains(j.Id))
+                    .AsNoTracking() // Verwende AsNoTracking() für reine Leseoperationen
                     .ToListAsync();
 
                 foreach (var job in adminJobs)
@@ -114,7 +118,7 @@ namespace ASPnet_Jobtastic.Controllers
         // POST: Neues JobPosting speichern
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult CreateJob(JobPostingModel jobPostingModel, IFormFile CompanyImage)
+        public async Task<IActionResult> CreateJob(JobPostingModel jobPostingModel, IFormFile CompanyImage)
         {
             var username = User.Identity?.Name;
             if (string.IsNullOrEmpty(username))
@@ -167,14 +171,12 @@ namespace ASPnet_Jobtastic.Controllers
                 try
                 {
                     _context.JobPostings.Add(jobPostingModel);
-                    _context.SaveChanges();
+                    await _context.SaveChangesAsync();
 
                     SweetAlertMessage("Job gespeichert", "Der Job wurde erfolgreich gespeichert.", "success");
-                    
+
                     _logger.LogInformation("Neues JobPosting erstellt: {JobId} von {Username}", jobPostingModel.Id, username);
                     return RedirectToAction(nameof(Index));
-
-                    
                 }
                 catch (Exception ex)
                 {
@@ -182,7 +184,7 @@ namespace ASPnet_Jobtastic.Controllers
                     ModelState.AddModelError("", "Fehler beim Speichern des JobPostings. Bitte versuchen Sie es später erneut.");
                 }
             }
-            
+
             LogModelErrors();
             return View("CreatedEditJobPosting", jobPostingModel);
         }
@@ -197,7 +199,7 @@ namespace ASPnet_Jobtastic.Controllers
                 return authResult;
             }
 
-            var job = await _context.JobPostings.FindAsync(id);
+            var job = await _context.JobPostings.FindAsync(id); // Keine Verwendung von AsNoTracking()
             if (job == null)
             {
                 return NotFound();
@@ -329,7 +331,7 @@ namespace ASPnet_Jobtastic.Controllers
                 return authResult;
             }
 
-            var job = await _context.JobPostings.FindAsync(id);
+            var job = await _context.JobPostings.FindAsync(id); // Keine Verwendung von AsNoTracking()
             if (job == null)
             {
                 return NotFound();
@@ -374,7 +376,7 @@ namespace ASPnet_Jobtastic.Controllers
                 return authResult;
             }
 
-            var job = await _context.JobPostings.FindAsync(id);
+            var job = await _context.JobPostings.FindAsync(id); // Keine Verwendung von AsNoTracking()
             if (job == null)
             {
                 return NotFound();
@@ -383,6 +385,7 @@ namespace ASPnet_Jobtastic.Controllers
             // Lade alle bestehenden Freigaben
             var sharings = await _context.JobSharings
                 .Where(js => js.JobPostingId == id)
+                .AsNoTracking() // Verwende AsNoTracking() für reine Leseoperationen
                 .ToListAsync();
 
             var viewModel = new JobSharingViewModel
@@ -465,7 +468,6 @@ namespace ASPnet_Jobtastic.Controllers
 
             SweetAlertMessage("Freigabe gespeichert", "Die Freigabe wurde erfolgreich gespeichert.", "success");
 
-
             return RedirectToAction(nameof(ManageSharing), new { id = JobPostingId });
         }
 
@@ -497,18 +499,17 @@ namespace ASPnet_Jobtastic.Controllers
 
             SweetAlertMessage("Freigabe entfernt", "Die Freigabe wurde erfolgreich entfernt.", "success");
 
-
             return RedirectToAction(nameof(ManageSharing), new { id = jobId });
         }
 
-        private void SweetAlertMessage (string title, string text, string icon)
+        private void SweetAlertMessage(string title, string text, string icon)
         {
             // Erfolgsmeldung setzen
             TempData["SweetAlert"] = new Dictionary<string, string> {
-                        { "title", title },
-                        { "text", text },
-                        { "icon", icon }
-                    };
+                { "title", title },
+                { "text", text },
+                { "icon", icon }
+            };
         }
     }
 }
