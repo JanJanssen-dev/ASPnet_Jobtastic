@@ -3,6 +3,14 @@
     var hasExternalLogins = (await SignInManager.GetExternalAuthenticationSchemesAsync()).Any();
 }
 <ul class="nav nav-pills flex-column">
+    @* Nur für Admins anzeigen *@
+    @if (User.IsInRole("Administrator"))
+    {
+        <li class="nav-item">
+            <a class="nav-link text-danger" asp-controller="Admin" asp-action="Index">Admin Panel</a>
+        </li>
+    }
+
     <li class="nav-item"><a class="nav-link @ManageNavPages.IndexNavClass(ViewContext)" id="profile" asp-page="./Index">Profile</a></li>
     <li class="nav-item"><a class="nav-link @ManageNavPages.EmailNavClass(ViewContext)" id="email" asp-page="./Email">Email</a></li>
     <li class="nav-item"><a class="nav-link @ManageNavPages.ChangePasswordNavClass(ViewContext)" id="change-password" asp-page="./ChangePassword">Password</a></li>

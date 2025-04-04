@@ -29,8 +29,8 @@ namespace ASPnet_Jobtastic.Controllers
             _userManager = userManager;
         }
 
-        // Übersicht aller JobPostings des eingeloggten Users
-        public async Task<IActionResult> Index()
+        // Übersicht aller JobPostings mit Filteroption für Admins
+        public async Task<IActionResult> Index(bool showAllJobs = false)
         {
             var username = User.Identity?.Name;
             if (string.IsNullOrEmpty(username))
@@ -40,12 +40,15 @@ namespace ASPnet_Jobtastic.Controllers
 
             // Prüfe, ob Benutzer Admin ist
             var user = await _userManager.FindByNameAsync(username);
-            bool isAdmin = user != null && await _userManager.IsInRoleAsync(user, "Admin");
+            bool isAdmin = user != null && await _userManager.IsInRoleAsync(user, "Administrator");
+
+            // Liste der Jobs, die der Nutzer sehen soll
+            List<JobPostingModel> allJobPostings = new List<JobPostingModel>();
 
             // Eigene Postings
-            var ownedJobPostings = _context.JobPostings
+            var ownedJobPostings = await _context.JobPostings
                 .Where(x => x.OwnerUsername == username)
-                .ToList();
+                .ToListAsync();
 
             // Setze Eigenschaften für eigene Jobs
             foreach (var job in ownedJobPostings)
@@ -54,32 +57,51 @@ namespace ASPnet_Jobtastic.Controllers
                 job.IsAdmin = isAdmin;
                 job.CanEdit = true;
                 job.CanDelete = true;
+                allJobPostings.Add(job);
             }
 
             // Freigaben anderer Benutzer
-            var sharedJobPostingIds = _context.JobSharings
+            var sharedJobPostingIds = await _context.JobSharings
                 .Where(x => x.SharedUsername == username)
-                .ToList();
+                .Select(x => x.JobPostingId)
+                .ToListAsync();
 
-            var sharedJobPostings = new List<JobPostingModel>();
-            foreach (var sharing in sharedJobPostingIds)
+            var sharedJobPostings = await _context.JobPostings
+                .Where(j => sharedJobPostingIds.Contains(j.Id))
+                .ToListAsync();
+
+            foreach (var job in sharedJobPostings)
             {
-                var job = await _context.JobPostings.FindAsync(sharing.JobPostingId);
-                if (job != null)
+                job.IsOwner = false;
+                job.IsAdmin = isAdmin;
+                job.CanEdit = true;
+                job.CanDelete = true;
+                allJobPostings.Add(job);
+            }
+
+            // Wenn Admin und showAllJobs ist true, füge alle anderen Jobs hinzu
+            if (isAdmin && showAllJobs)
+            {
+                var existingJobIds = allJobPostings.Select(j => j.Id).ToList();
+
+                var adminJobs = await _context.JobPostings
+                    .Where(j => !existingJobIds.Contains(j.Id))
+                    .ToListAsync();
+
+                foreach (var job in adminJobs)
                 {
                     job.IsOwner = false;
-                    job.IsAdmin = isAdmin;
-                    job.CanEdit = sharing.CanEdit;
-                    job.CanDelete = sharing.CanDelete;
-                    sharedJobPostings.Add(job);
+                    job.IsAdmin = true;
+                    job.CanEdit = true;
+                    job.CanDelete = true;
+                    job.IsAdminView = true;  // Markiere Jobs, die nur über Admin-Ansicht sichtbar sind
+                    allJobPostings.Add(job);
                 }
             }
 
-            // Beide Listen zusammenführen
-            var allJobPostings = ownedJobPostings
-                .Concat(sharedJobPostings)
-                .OrderBy(x => x.CreationDate)
-                .ToList();
+            // ViewBag-Eigenschaften für View-Logik
+            ViewBag.IsAdmin = isAdmin;
+            ViewBag.ShowAllJobs = showAllJobs;
 
             return View(allJobPostings);
         }
@@ -93,7 +115,7 @@ namespace ASPnet_Jobtastic.Controllers
         // POST: Neues JobPosting speichern
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult CreateJob(JobPostingModel jobPostingModel, IFormFile CompanyImage)
+        public async Task<IActionResult> CreateJob(JobPostingModel jobPostingModel, IFormFile CompanyImage)
         {
             var username = User.Identity?.Name;
             if (string.IsNullOrEmpty(username))
@@ -146,7 +168,10 @@ namespace ASPnet_Jobtastic.Controllers
                 try
                 {
                     _context.JobPostings.Add(jobPostingModel);
-                    _context.SaveChanges();
+                    await _context.SaveChangesAsync();
+
+                    SweetAlertMessage("Job gespeichert", "Der Job wurde erfolgreich gespeichert.", "success");
+
                     _logger.LogInformation("Neues JobPosting erstellt: {JobId} von {Username}", jobPostingModel.Id, username);
                     return RedirectToAction(nameof(Index));
                 }
@@ -200,7 +225,7 @@ namespace ASPnet_Jobtastic.Controllers
             // Den Kontext für das existierende JobPosting löschen, um Tracking-Konflikte zu vermeiden
             _context.ChangeTracker.Clear();
 
-            var existingJob = await _context.JobPostings.AsNoTracking().FirstOrDefaultAsync(j => j.Id == id);
+            var existingJob = await _context.JobPostings.FirstOrDefaultAsync(j => j.Id == id);
             if (existingJob == null)
             {
                 return NotFound();
@@ -263,6 +288,8 @@ namespace ASPnet_Jobtastic.Controllers
                     _context.JobPostings.Update(jobPostingModel);
                     await _context.SaveChangesAsync();
 
+                    SweetAlertMessage("Job gespeichert", "Der Job wurde erfolgreich gespeichert.", "success");
+
                     _logger.LogInformation("JobPosting aktualisiert: {JobId} von {Username}", id, User.Identity?.Name);
                     return RedirectToAction(nameof(Index));
                 }
@@ -311,6 +338,9 @@ namespace ASPnet_Jobtastic.Controllers
             {
                 _context.JobPostings.Remove(job);
                 await _context.SaveChangesAsync();
+
+                SweetAlertMessage("Job gelöscht", "Der Job wurde erfolgreich gelöscht.", "success");
+
                 _logger.LogInformation("JobPosting gelöscht: {JobId} von {Username}", id, User.Identity?.Name);
                 return RedirectToAction(nameof(Index));
             }
@@ -343,7 +373,7 @@ namespace ASPnet_Jobtastic.Controllers
                 return authResult;
             }
 
-            var job = await _context.JobPostings.FindAsync(id);
+            var job = await _context.JobPostings.FindAsync(id); 
             if (job == null)
             {
                 return NotFound();
@@ -357,7 +387,7 @@ namespace ASPnet_Jobtastic.Controllers
             var viewModel = new JobSharingViewModel
             {
                 JobPosting = job,
-                ExistingShares = sharings,
+                ExistingShares = sharings ?? new List<JobSharingModel>(), //zusätzliche NULL prüfung
                 NewShare = new JobSharingModel { JobPostingId = id }
             };
 
@@ -403,6 +433,8 @@ namespace ASPnet_Jobtastic.Controllers
             _context.JobSharings.Add(newSharing);
             await _context.SaveChangesAsync();
 
+            SweetAlertMessage("Freigabe gespeichert", "Die Freigabe wurde erfolgreich gespeichert.", "success");
+
             return RedirectToAction(nameof(ManageSharing), new { id = jobId });
         }
 
@@ -429,6 +461,8 @@ namespace ASPnet_Jobtastic.Controllers
             sharing.CanDelete = CanDelete;
 
             await _context.SaveChangesAsync();
+
+            SweetAlertMessage("Freigabe gespeichert", "Die Freigabe wurde erfolgreich gespeichert.", "success");
 
             return RedirectToAction(nameof(ManageSharing), new { id = JobPostingId });
         }
@@ -459,7 +493,19 @@ namespace ASPnet_Jobtastic.Controllers
             _context.JobSharings.Remove(sharing);
             await _context.SaveChangesAsync();
 
+            SweetAlertMessage("Freigabe entfernt", "Die Freigabe wurde erfolgreich entfernt.", "success");
+
             return RedirectToAction(nameof(ManageSharing), new { id = jobId });
+        }
+
+        private void SweetAlertMessage(string title, string text, string icon)
+        {
+            // Erfolgsmeldung setzen
+            TempData["SweetAlert"] = new Dictionary<string, string> {
+                { "title", title },
+                { "text", text },
+                { "icon", icon }
+            };
         }
     }
 }
