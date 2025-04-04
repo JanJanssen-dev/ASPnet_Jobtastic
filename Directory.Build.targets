@@ -1,0 +1,10 @@
+<Project>
+	<Target Name="PreventAppsettingsOverwrite" BeforeTargets="PrepareForBuild">
+		<PropertyGroup>
+			<CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+		</PropertyGroup>
+		<ItemGroup>
+			<None Update="appsettings.json" CopyToOutputDirectory="Never" />
+		</ItemGroup>
+	</Target>
+</Project>
