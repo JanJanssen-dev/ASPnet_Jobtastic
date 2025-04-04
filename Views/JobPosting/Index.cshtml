@@ -3,9 +3,13 @@
 @{
     ViewData["Title"] = "Deine Inserate";
 
-    // Jobs in eigene und freigegebene aufteilen
+    // Jobs in eigene, freigegebene und Admin-Jobs aufteilen
     var ownedJobs = Model.Where(j => j.IsOwner).ToList();
-    var sharedJobs = Model.Where(j => !j.IsOwner).ToList();
+    var sharedJobs = Model.Where(j => !j.IsOwner && !j.IsAdminView).ToList();
+    var adminJobs = Model.Where(j => j.IsAdminView).ToList();
+
+    bool isAdmin = ViewBag.IsAdmin ?? false;
+    bool showAllJobs = ViewBag.ShowAllJobs ?? false;
 }
 
 @* Hauptcontainer für die gesamte Seite *@
@@ -14,6 +18,24 @@
     <div class="mt-6 p-5 bg-primary text-white rounded text-center">
         <h2>Deine Inserate</h2>
     </div>
+
+    @* Admin-Filter (nur für Administratoren anzeigen) *@
+    @if (isAdmin)
+    {
+        <div class="mb-3 p-3 bg-light border rounded">
+            <form asp-action="Index" method="get" class="d-flex align-items-center">
+                <div class="form-check form-switch me-3">
+                    <input class="form-check-input" type="checkbox" id="showAllJobs" name="showAllJobs" value="true" @(showAllJobs ? "checked" : "")>
+                    <label class="form-check-label" for="showAllJobs">Alle Jobs im System anzeigen</label>
+                </div>
+                <div class="text-muted ms-3">
+                    <i class="bi bi-info-circle"></i>
+                    Als Administrator kannst du zwischen deinen eigenen Jobs und allen Jobs im System wechseln.
+                </div>
+            </form>
+        </div>
+    } 
+
 
     @* Button zum Erstellen eines neuen Jobs (oberer Button) *@
     <div class="text-end mb-3">
@@ -181,6 +203,77 @@
     </section>
     @* #endregion FREIGEGEBENE JOBS *@
 
+    @* #region ADMIN JOBS - Nur anzeigen, wenn der Benutzer Admin ist und den Filter aktiviert hat *@
+    @if (isAdmin && showAllJobs && adminJobs.Any())
+    {
+        <section class="mt-4 p-4 bg-warning bg-opacity-10 rounded shadow-sm">
+            <h3 class="mb-3">
+                <span class="badge bg-warning text-dark me-2">Admin</span>
+                Alle anderen Jobs im System
+            </h3>
+            <div class="alert alert-warning">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                Du siehst diese Jobs als Administrator. Bearbeite sie mit Vorsicht!
+            </div>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Logo</th>
+                        <th>Job Titel</th>
+                        <th>Company</th>
+                        <th>ASP</th>
+                        <th>Start am</th>
+                        <th>Erstellt am</th>
+                        <th>Besitzer</th>
+                        <th>Aktionen</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in adminJobs)
+                    {
+                        <tr>
+                            @* Unternehmenslogo aus der Datenbank anzeigen *@
+                            <td>
+                                @if (item.CompanyImage != null && item.CompanyImage.Length > 0)
+                                {
+                                    var base64 = Convert.ToBase64String(item.CompanyImage);
+                                    <img src="data:image/png;base64,@base64" alt="Logo" style="max-width: 80px; max-height: 40px;" />
+                                }
+                            </td>
+                            <td class="align-middle">@item.JobTitle</td>
+                            <td class="align-middle">@item.CompanyName</td>
+                            <td class="align-middle">@item.ContactName</td>
+                            <td class="align-middle">@item.StartDate.ToShortDateString()</td>
+                            <td class="align-middle">
+                                @if (item.CreationDate.HasValue)
+                                {
+                                    @item.CreationDate.Value.ToShortDateString()
+                                }
+                            </td>
+                            @* Eigentümer des Jobs anzeigen *@
+                            <td class="align-middle">
+                                <span class="badge bg-info">@item.OwnerUsername</span>
+                            </td>
+                            @* Aktions-Buttons für Administratoren *@
+                            <td class="align-middle">
+                                <div class="btn-group" role="group">
+                                    @* Bearbeitungs-Button *@
+                                    <a asp-action="EditJob" asp-route-id="@item.Id" class="btn btn-primary btn-sm">Bearbeiten</a>
+
+                                    @* Lösch-Button mit Bestätigungsdialog *@
+                                    <form asp-action="DeleteJob" asp-route-id="@item.Id" method="post" id="deleteForm-@item.Id">
+                                        <button type="button" class="btn btn-danger btn-sm" onclick="confirmDelete(@item.Id, '@item.JobTitle')">Löschen</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </section>
+    }
+    @* #endregion ADMIN JOBS *@
+
     @* Button zum Erstellen eines neuen Jobs (unterer Button) *@
     <div class="text-end mt-3">
         <a class="btn btn-outline-primary" asp-controller="JobPosting" asp-action="CreateJob">Neuen Job anlegen</a>
@@ -223,6 +316,43 @@
                 }
             });
         }
+        /**
+         * Event-Listener für die Admin-Ansicht Checkbox
+         * Wird ausgeführt, sobald die DOM-Struktur der Seite vollständig geladen ist mit Sweetalerts2
+         */
+        document.addEventListener('DOMContentLoaded', function() {
+            // Die Checkbox für "Alle Jobs anzeigen" im DOM finden
+            const showAllJobsCheckbox = document.getElementById('showAllJobs');
+
+            // Nur fortfahren, wenn die Checkbox existiert (Fehlerbehandlung)
+            if (showAllJobsCheckbox) {
+                // Event-Handler für Änderungen der Checkbox definieren
+                showAllJobsCheckbox.onchange = function(e) {
+                    // Das Standard-Verhalten der Checkbox verhindern
+                    e.preventDefault();
+
+                    // Formular-Referenz speichern
+                    const form = this.form;
+
+                    // SweetAlert anzeigen
+                    Swal.fire({
+                        position: "top-end",
+                        icon: "success",
+                        title: this.checked ? "Admin-Ansicht aktiviert" : "Admin-Ansicht deaktiviert",
+                        showConfirmButton: false,
+                        timer: 2000,
+                        allowOutsideClick: false,  // Verhindert, dass der Alert durch Klicks geschlossen wird
+                        willClose: () => {
+                            // Formular absenden, wenn der Alert geschlossen wird
+                            form.submit();
+                        }
+                    });
+                };
+            }
+        });
+    
     </script>
 }
 @* #endregion JAVASCRIPT *@
+
+

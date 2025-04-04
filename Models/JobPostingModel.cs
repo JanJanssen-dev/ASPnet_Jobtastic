@@ -14,11 +14,11 @@ namespace ASPnet_Jobtastic.Models
         public string? ContactName { get; set; } = string.Empty;
         public string ContactEmail { get; set; } = string.Empty;
         public string? CompanyWebsite { get; set; } = string.Empty;
-        public byte[]? CompanyImage { get; set; } 
+        public byte[]? CompanyImage { get; set; }
         public string OwnerUsername { get; set; } = string.Empty;
         public DateTime? CreationDate { get; set; }
         public DateTime? ChangeDate { get; set; }
-        public string? ChangeUserName {  get; set; } = string.Empty;
+        public string? ChangeUserName { get; set; } = string.Empty;
         public string[]? AllowedUserNames { get; set; }
 
         [NotMapped]
@@ -32,5 +32,8 @@ namespace ASPnet_Jobtastic.Models
 
         [NotMapped]
         public bool CanDelete { get; set; }
+
+        [NotMapped]
+        public bool IsAdminView { get; set; } = false;
     }
 }

@@ -82,6 +82,24 @@
             });
         </script>
     }
+
+    @if (TempData.ContainsKey("SweetAlert"))
+    {
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                var alertData = @Html.Raw(Json.Serialize(TempData["SweetAlert"]));
+                Swal.fire({
+                    title: alertData.title,
+                    text: alertData.text,
+                    icon: alertData.icon,
+                    position: "top-end",
+                    timer: 2000,
+                    showConfirmButton: false,
+                    toast: true
+                });
+            });
+        </script>
+    }
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
