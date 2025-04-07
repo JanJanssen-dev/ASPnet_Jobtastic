@@ -13,16 +13,17 @@
 }
 
 @* Hauptcontainer für die gesamte Seite *@
-<section class="p-4 bg-light rounded shadow-sm">
+<section class="p-4 bg-light rounded shadow">
     @* Header-Bereich mit Titel *@
-    <div class="mt-6 p-5 bg-primary text-white rounded text-center">
-        <h2>Deine Inserate</h2>
+    <div class="p-4 mb-3 rounded-3 text-center shadow" style="background-color: #F2FDFF">
+        <img src="~/images/JobtasticBannerNEW.png" alt="Jobtastic" class="img-fluid" style="max-width: 100%; height: auto;">
+        <h4 style="color: #0195ED">Jobpostings erstellen und die passenden Talente finden</h4>
     </div>
 
     @* Admin-Filter (nur für Administratoren anzeigen) *@
     @if (isAdmin)
     {
-        <div class="mb-3 p-3 bg-light border rounded">
+        <div class="mb-3 p-3 bg-light border rounded shadow">
             <form asp-action="Index" method="get" class="d-flex align-items-center">
                 <div class="form-check form-switch me-3">
                     <input class="form-check-input" type="checkbox" id="showAllJobs" name="showAllJobs" value="true" @(showAllJobs ? "checked" : "")>
@@ -39,11 +40,11 @@
 
     @* Button zum Erstellen eines neuen Jobs (oberer Button) *@
     <div class="text-end mb-3">
-        <a class="btn btn-outline-primary" asp-controller="JobPosting" asp-action="CreateJob">Neuen Job anlegen</a>
+        <a class="btn btn-outline-primary shadow" asp-controller="JobPosting" asp-action="CreateJob">Neuen Job anlegen</a>
     </div>
 
     @* #region EIGENE JOBS *@
-    <section class="mt-3 p-4 bg-light rounded shadow-sm">
+    <section class="mt-3 p-4 bg-light rounded shadow">
         <h3 class="mb-3">Deine erstellten Jobs</h3>
         @if (ownedJobs.Any())
         {
@@ -96,14 +97,14 @@
                             <td class="align-middle">
                                 <div class="btn-group" role="group">
                                     @* Bearbeitungs-Button *@
-                                    <a asp-action="EditJob" asp-route-id="@item.Id" class="btn btn-primary btn-sm">Bearbeiten</a>
+                                    <a asp-action="EditJob" asp-route-id="@item.Id" class="btn btn-primary btn-sm shadow">Bearbeiten</a>
 
                                     @* Freigabe-Button (nur bei eigenen Jobs) *@
-                                    <a asp-action="ManageSharing" asp-route-id="@item.Id" class="btn btn-info btn-sm">Freigeben</a>
+                                    <a asp-action="ManageSharing" asp-route-id="@item.Id" class="btn btn-info btn-sm shadow">Freigeben</a>
 
                                     @* Lösch-Button mit Bestätigungsdialog *@
                                     <form asp-action="DeleteJob" asp-route-id="@item.Id" method="post" id="deleteForm-@item.Id">
-                                        <button type="button" class="btn btn-danger btn-sm" onclick="confirmDelete(@item.Id, '@item.JobTitle')">Löschen</button>
+                                        <button type="button" class="btn btn-danger btn-sm shadow" onclick="confirmDelete(@item.Id, '@item.JobTitle')">Löschen</button>
                                     </form>
                                 </div>
                             </td>
@@ -115,7 +116,7 @@
         else
         {
             @* Info-Meldung, wenn keine eigenen Jobs vorhanden sind *@
-            <div class="alert alert-info">
+            <div class="alert alert-info shadow">
                 Du hast noch keine eigenen Jobangebote erstellt.
                 <a asp-controller="JobPosting" asp-action="CreateJob">Erstelle jetzt dein erstes Jobangebot</a>
             </div>
@@ -124,7 +125,7 @@
     @* #endregion EIGENE JOBS *@
 
     @* #region FREIGEGEBENE JOBS *@
-    <section class="mt-4 p-4 bg-light rounded shadow-sm">
+    <section class="mt-4 p-4 bg-light rounded shadow">
         <h3 class="mb-3">Für dich freigegebene Jobs</h3>
         @if (sharedJobs.Any())
         {
@@ -196,7 +197,7 @@
         else
         {
             @* Info-Meldung, wenn keine freigegebenen Jobs vorhanden sind *@
-            <div class="alert alert-info">
+            <div class="alert alert-info shadow-sm">
                 Es wurden keine Jobs für dich freigegeben.
             </div>
         }

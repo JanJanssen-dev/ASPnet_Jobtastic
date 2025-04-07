@@ -9,20 +9,27 @@
     }
 }
 
-<h1>Manage your account</h1>
-
+<section class="p-4 bg-light rounded shadow">
+    @* Header-Bereich mit Titel *@
+    <div class="p-4 mb-3 rounded-3 text-center shadow" style="background-color: #F2FDFF">
+        <img src="~/images/JobtasticBannerNEW.png" alt="Jobtastic" class="img-fluid" style="max-width: 100%; height: auto;">
+        <h4 style="color: #0195ED">Dein Konto, deine Einstellungen</h4>
+    </div>
+    <section class="p-4 bg-light rounded shadow">
 <div>
-    <h2>Change your account settings</h2>
+            <h2>Mach dein Konto, wie du es willst</h2>
     <hr />
-    <div class="row">
-        <div class="col-md-3">
+            <div class="row">
+                <div class="col-md-3 p-4 bg-light rounded shadow-sm">
             <partial name="_ManageNav" />
         </div>
-        <div class="col-md-9">
+                <div class="col-md-9 p-4 bg-light">
             @RenderBody()
         </div>
     </div>
 </div>
+    </section>
+</section>
 
 @section Scripts {
     @RenderSection("Scripts", required: false)

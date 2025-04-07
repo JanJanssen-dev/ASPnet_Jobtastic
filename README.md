@@ -1,6 +1,6 @@
 # ASPnet_Jobtastic
 
-<img src="/wwwroot/images/JJlogo-modified.png" alt="Jobtastic" width="50%" height="auto">
+<img src="/wwwroot/images/JobtasticBannerNEW.png" alt="Jobtastic" width="50%" height="auto">
 
 ## Inhaltsverzeichnis
 - [Übersicht](#übersicht)

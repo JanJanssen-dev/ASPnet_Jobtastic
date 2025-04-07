@@ -4,18 +4,19 @@
     ViewData["Title"] = "Home Page";
 }
 
-<div class="p-4 rounded-3 text-center" style="background-color: #F2FDFF">
-    <img src="~/images/JobtasticBannerNEW.png" alt="Jobtastic" class="img-fluid" style="max-width: 100%; height: auto;">
-    <h4 style="color: #0195ED">Finde deinen Traumjob oder die perfekten Kandidaten für dein Unternehmen</h4>
-</div>
+@* Hauptcontainer für die gesamte Seite *@
+<section class="p-4 bg-light rounded shadow-sm">
+    @* Header-Bereich mit Titel *@
+    <div class="p-4 mb-3 rounded-3 text-center shadow" style="background-color: #F2FDFF">
+        <img src="~/images/JobtasticBannerNEW.png" alt="Jobtastic" class="img-fluid" style="max-width: 100%; height: auto;">
+        <h4 style="color: #0195ED">Finde deinen Traumjob oder die perfekten Kandidaten für dein Unternehmen</h4>
+    </div>
 
-@* Jobinserate-Bereich für öffentliche Anzeige *@
-<section class="mt-4 p-3 bg-light rounded-3 shadow-sm">
+<section class="mt-4 p-4 bg-light rounded shadow">
     <h2 class="mb-4 text-center">Aktuelle Jobangebote</h2>
 
     @if (Model != null && Model.Any())
     {
-        @* Jobinserate-Tabelle mit DataTables *@
         <div class="table-responsive">
             <table id="jobsTable" class="table table-striped table-hover">
                 <thead>
@@ -64,7 +65,7 @@
                             </td>
                             <td>
                                 <button type="button" class="btn btn-primary btn-sm"
-                                        onclick="showJobDetails('@job.Id', '@job.JobTitle.Replace("'", "\\'")','@job.CompanyName.Replace("'", "\\'")','@job.JobLocation.Replace("'", "\\'")','@job.StartDate.ToShortDateString()')">
+                                        onclick="showJobDetails(@job.Id, '@job.JobTitle.Replace("'", "\\'")','@job.CompanyName.Replace("'", "\\'")')">
                                     Details
                                 </button>
                             </td>
@@ -81,112 +82,212 @@
         </div>
     }
 </section>
-
-@* Versteckte Divs für die Jobbeschreibungen *@
-@foreach (var job in Model)
-{
-    <div id="jobDescription-@job.Id" style="display: none;">
-        @Html.Raw(job.JobDescription.Replace("\n", "<br>"))
-    </div>
-}
-
+</section>
 @section Scripts {
-    @* DataTables CSS und JS einbinden *@
-    
     <script>
-        $(document).ready(function() {
-            // DataTable initialisieren
-            $('#jobsTable').DataTable({
-                language: {
-                    url: 'https://cdn.datatables.net/plug-ins/1.11.5/i18n/de-DE.json'
-                },
-                responsive: true,
-                lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "Alle"]],
-                order: [[5, 'desc']], // Nach Erstellungsdatum absteigend sortieren
-                columnDefs: [
-                    { targets: 0, orderable: true }, // Unternehmen
-                    { targets: 6, orderable: false } // Aktionen-Spalte
-                ]
-            });
-        });
+        // Limitiere die Größe des Caches auf 50 Einträge
+        const MAX_CACHE_SIZE = 50;
+
+        // Caching-Mechanismus für Jobdetails mit Größenbeschränkung
+        const jobDetailsCache = {
+            _cache: {},
+            get(jobId) {
+                return this._cache[jobId];
+            },
+            set(jobId, details) {
+                // Wenn Cache-Limit erreicht, älteste Einträge entfernen
+                if (Object.keys(this._cache).length >= MAX_CACHE_SIZE) {
+                    const oldestKey = Object.keys(this._cache)[0];
+                    delete this._cache[oldestKey];
+                }
+                this._cache[jobId] = details;
+            }
+        };
 
         /**
-         * Zeigt Jobdetails mit SweetAlert2 an
+         * Holt Jobdetails mit verbesserter Caching-Strategie
+         * @@param {number} jobId - ID des Jobs
+         * @@returns {Promise<Object>} Job-Detailinformationen
          */
-        function showJobDetails(id, title, company, location, startDate) {
-            // Jobbeschreibung holen
-            const jobDescription = document.getElementById('jobDescription-' + id).innerHTML;
-
-            // Lade Jobdaten aus dem Modell
-            const job = @Html.Raw(Json.Serialize(Model))
-                .find(j => j.id === parseInt(id));
-
-            // Logo HTML
-            let logoHtml = '';
-            if (job.companyImage) {
-                const base64 = btoa(String.fromCharCode.apply(null, new Uint8Array(job.companyImage)));
-                logoHtml = `<img src="data:image/png;base64,${base64}" alt="${company} Logo"
-                           class="img-fluid mb-3" style="max-height: 100px;"><br>`;
+        async function fetchJobDetails(jobId) {
+            // Wenn Details bereits im Cache, direkt zurückgeben
+            const cachedDetails = jobDetailsCache.get(jobId);
+            if (cachedDetails) {
+                return cachedDetails;
             }
 
-            // Kontaktinfo
-            let contactHtml = '<h5 class="mt-3">Kontakt</h5>';
-            if (job.contactName) {
-                contactHtml += `<p><strong>Ansprechpartner:</strong> ${job.contactName}</p>`;
-            }
-            if (job.contactEmail) {
-                contactHtml += `<p><strong>E-Mail:</strong> ${job.contactEmail}</p>`;
-            }
+            try {
+                const response = await fetch(`/Home/GetJobDetails/${jobId}`);
+                if (!response.ok) {
+                    throw new Error('Jobdetails konnten nicht geladen werden');
+                }
+                const jobDetails = await response.json();
 
-            // Website
-            let websiteHtml = '';
-            if (job.companyWebsite) {
-                websiteHtml = `<p><strong>Website:</strong> <a href="${job.companyWebsite}" target="_blank">${job.companyWebsite}</a></p>`;
+                // Im Cache speichern mit Größenbeschränkung
+                jobDetailsCache.set(jobId, jobDetails);
+
+                return jobDetails;
+            } catch (error) {
+                console.error('Fehler beim Laden der Jobdetails:', error);
+                return {
+                    jobTitle: 'Fehler',
+                    jobDescription: 'Keine Details verfügbar',
+                    companyName: 'Unbekannt'
+                };
             }
+        }
+
+        /**
+         * Generiert HTML für Jobdetail-Modal
+         * @@param {Object} job - Jobobjekt
+         * @@returns {string} Generiertes HTML
+         */
+        function generateJobDetailHTML(job) {
+            // Logo generieren mit Fallback für Base64-Konvertierung
+            const logoHtml = job.companyImage && job.companyImage.length > 0
+                ? `<img src="data:image/png;base64,${btoa(String.fromCharCode.apply(null, new Uint8Array(job.companyImage)))}"
+                    alt="${job.companyName} Logo"
+                    class="img-fluid mb-3"
+                    style="max-height: 100px; max-width: 200px; object-fit: contain;">`
+                : '';
 
             // Gehalt formatieren
-            let salary = 'Nach Vereinbarung';
-            if (job.salary > 0) {
-                salary = new Intl.NumberFormat('de-DE').format(job.salary) + ' €';
-            }
+            const salary = job.salary > 0
+                ? new Intl.NumberFormat('de-DE', {
+                    style: 'currency',
+                    currency: 'EUR',
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0
+                }).format(job.salary)
+                : 'Nach Vereinbarung';
 
-            Swal.fire({
-                title: `${title} bei ${company}`,
-                html: `
-                    <div class="text-center">
-                        ${logoHtml}
+            // Kontaktinformationen generieren
+            const contactHtml = `
+                <h5 class="mt-3">Kontakt</h5>
+                ${job.contactName ? `<p><strong>Ansprechpartner:</strong> ${job.contactName}</p>` : ''}
+                ${job.contactEmail ? `<p><strong>E-Mail:</strong> <a href="mailto:${job.contactEmail}">${job.contactEmail}</a></p>` : ''}
+            `;
+
+            // Website generieren
+            const websiteHtml = job.companyWebsite
+                ? `<p><strong>Website:</strong> <a href="${job.companyWebsite}" target="_blank" rel="noopener noreferrer">${job.companyWebsite}</a></p>`
+                : '';
+
+            return `
+                <div class="text-center">
+                    ${logoHtml}
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Standort:</strong> ${job.jobLocation}</p>
+                        <p><strong>Startdatum:</strong> ${new Date(job.startDate).toLocaleDateString('de-DE')}</p>
+                        <p><strong>Gehalt:</strong> ${salary}</p>
+                        ${websiteHtml}
                     </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <p><strong>Standort:</strong> ${location}</p>
-                            <p><strong>Startdatum:</strong> ${startDate}</p>
-                            <p><strong>Gehalt:</strong> ${salary}</p>
-                            ${websiteHtml}
-                        </div>
-                        <div class="col-md-6">
-                            ${contactHtml}
-                        </div>
+                    <div class="col-md-6">
+                        ${contactHtml}
                     </div>
-                    <hr>
-                    <div class="text-left">
-                        <h5>Beschreibung</h5>
-                        <div id="description-container-${id}"></div>
-                    </div>
-                `,
-                width: '80%',
-                showCloseButton: true,
-                showCancelButton: true,
-                focusConfirm: false,
-                confirmButtonText: 'Jetzt bewerben!',
-                cancelButtonText: 'Schließen',
-                didOpen: () => {
-                    document.getElementById(`description-container-${id}`).innerHTML = jobDescription;
-                }
-            }).then((result) => {
-                if (result.isConfirmed && job.contactEmail) {
-                    window.location.href = `mailto:${job.contactEmail}?subject=Bewerbung für ${title}`;
-                }
-            });
+                </div>
+                <hr>
+                <div class="text-left">
+                    <h5>Beschreibung</h5>
+                    <div class="job-description">${job.jobDescription || 'Keine Beschreibung verfügbar'}</div>
+                </div>
+            `;
         }
+
+        /**
+         * Zeigt Jobdetails mit optimierter Modal-Anzeige
+         * @@param {number} id - Job-ID
+         * @@param {string} title - Jobtitel
+         * @@param {string} company - Unternehmensname
+         */
+        async function showJobDetails(id, title, company) {
+            try {
+                // Job-Details laden mit Ladeindikator
+                Swal.fire({
+                    title: 'Laden...',
+                    text: 'Jobdetails werden geladen',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                // Job-Details laden
+                const job = await fetchJobDetails(id);
+
+                // HTML generieren und Modal anzeigen
+                Swal.fire({
+                    title: `${title} bei ${company}`,
+                    html: generateJobDetailHTML(job),
+                    width: '80%',
+                    showCloseButton: true,
+                    showCancelButton: true,
+                    cancelButtonText: 'Schließen',
+                    confirmButtonText: 'Jetzt bewerben!',
+                    didRender: () => {
+                        // Bewerbungs-Logik
+                        Swal.getConfirmButton().addEventListener('click', () => {
+                            if (job.contactEmail) {
+                                // Verbesserter Mailto-Link
+                                const mailtoLink = `mailto:${job.contactEmail}?subject=${encodeURIComponent(`Bewerbung für ${title}`)}&body=${encodeURIComponent(`Sehr geehrte Damen und Herren,\n\nIch interessiere mich für die ausgeschriebene Stelle "${title}".\n\nMit freundlichen Grüßen,\n`)}`;
+
+                                window.location.href = mailtoLink;
+                            } else {
+                                Swal.fire({
+                                    icon: 'info',
+                                    title: 'Kontakt nicht verfügbar',
+                                    text: 'Leider sind keine Kontaktinformationen hinterlegt.'
+                                });
+                            }
+                        });
+                    }
+                });
+
+            } catch (error) {
+                console.error('Fehler bei Jobdetails:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Fehler',
+                    text: 'Die Jobdetails konnten nicht geladen werden.'
+                });
+            }
+        }
+
+        // DataTable initialisieren mit erweiterten Performanz-Optimierungen
+        $(document).ready(function() {
+            // Performance-Optimierung: DataTable nur initialisieren, wenn Daten vorhanden
+            const $jobsTable = $('#jobsTable');
+            if ($jobsTable.length && $jobsTable.find('tbody tr').length > 0) {
+                $jobsTable.DataTable({
+                    language: {
+                        url: 'https://cdn.datatables.net/plug-ins/1.11.5/i18n/de-DE.json'
+                    },
+                    responsive: true,
+                    pageLength: 10,  // Standardmäßig 10 Einträge pro Seite
+                    lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "Alle"]],
+                    order: [[5, 'desc']], // Nach Erstellungsdatum absteigend sortieren
+                    columnDefs: [
+                        { targets: 0, orderable: true },   // Unternehmen
+                        { targets: 6, orderable: false }   // Aktionen-Spalte
+                    ],
+                    // Erweiterte Performanz-Optimierungen
+                    deferRender: true,    // Verzögertes Rendering
+                    scrollX: false,       // Vertikales Scrollen deaktivieren
+                    autoWidth: false,     // Automatische Spaltenbreite deaktivieren
+                    processing: true,     // Ladeindikator anzeigen
+                    serverSide: false,    // Clientseitige Verarbeitung
+
+                    // Zusätzliche Performanz-Optimierungen
+                    paging: true,         // Seitenumbruch aktivieren
+                    pageResize: false,    // Größenänderung deaktivieren
+                    search: {
+                        smart: true,      // Intelligente Suche aktivieren
+                        caseInsensitive: true // Groß-/Kleinschreibung ignorieren
+                    }
+                });
+            }
+        });
     </script>
 }

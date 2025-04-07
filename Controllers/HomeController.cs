@@ -19,13 +19,52 @@ namespace ASPnet_Jobtastic.Controllers
 
         public IActionResult Index()
         {
-            // Lade alle aktiven Jobinserate
+            // Lade alle aktiven Jobinserate mit minimalen Daten
             var jobPostings = _context.JobPostings
-                //.Where(j => j.IsActive) // Optional: Falls ein IsActive-Flag existiert
+                .Select(j => new JobPostingModel
+                {
+                    Id = j.Id,
+                    JobTitle = j.JobTitle,
+                    CompanyName = j.CompanyName,
+                    JobLocation = j.JobLocation,
+                    Salary = j.Salary,
+                    StartDate = j.StartDate,
+                    CreationDate = j.CreationDate,
+                    CompanyImage = j.CompanyImage
+                })
                 .OrderByDescending(j => j.CreationDate)
                 .ToList();
 
             return View(jobPostings);
+        }
+
+        // Neuer Endpoint für Jobdetails
+        [HttpGet]
+        public IActionResult GetJobDetails(int id)
+        {
+            var job = _context.JobPostings
+                .Select(j => new
+                {
+                    j.Id,
+                    j.JobTitle,
+                    j.JobDescription,
+                    j.CompanyName,
+                    j.JobLocation,
+                    j.StartDate,
+                    j.Salary,
+                    j.CompanyImage,
+                    j.ContactName,
+                    j.ContactEmail,
+                    j.CompanyWebsite
+                })
+                .FirstOrDefault(j => j.Id == id);
+
+            if (job == null)
+            {
+                return NotFound();
+            }
+
+            return Json(job);
         }
 
         public IActionResult Privacy()
