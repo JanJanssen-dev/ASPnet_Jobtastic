@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <Content Remove="wwwroot\images\default-logo.png" />
+    <Content Remove="wwwroot\images\JJlogo-modified.png" />
   </ItemGroup>
 
   <ItemGroup>
@@ -23,6 +24,10 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.14" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.14" />
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="8.0.7" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="wwwroot\images\JJlogo-modified.png" />
   </ItemGroup>
 
 </Project>

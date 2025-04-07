@@ -4,13 +4,13 @@
     ViewData["Title"] = "Home Page";
 }
 
-<div class="mt-4 p-5 bg-primary text-white rounded text-center">
-    <h1 class="display-1 mb-4">Jobtastic</h1>
-    <p>Finde deinen Traumjob oder die perfekten Kandidaten für dein Unternehmen</p>
+<div class="p-4 rounded-3 text-center" style="background-color: #F2FDFF">
+    <img src="~/images/JobtasticBannerNEW.png" alt="Jobtastic" class="img-fluid" style="max-width: 100%; height: auto;">
+    <h4 style="color: #0195ED">Finde deinen Traumjob oder die perfekten Kandidaten für dein Unternehmen</h4>
 </div>
 
 @* Jobinserate-Bereich für öffentliche Anzeige *@
-<section class="mt-4 p-4 bg-light rounded shadow-sm">
+<section class="mt-4 p-3 bg-light rounded-3 shadow-sm">
     <h2 class="mb-4 text-center">Aktuelle Jobangebote</h2>
 
     @if (Model != null && Model.Any())
