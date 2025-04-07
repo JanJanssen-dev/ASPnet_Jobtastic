@@ -32,7 +32,7 @@
 
 ASPnet_Jobtastic ist eine moderne ASP.NET Core-Webanwendung, die als Stellenportal dient. Die Anwendung ermöglicht es Benutzern, Stellenangebote zu erstellen, zu verwalten und mit anderen Benutzern zu teilen. Sie verfügt über ein robustes Autorisierungssystem, Benutzerverwaltung mit unterschiedlichen Rollen und eine intuitive Benutzeroberfläche.
 
-![Jobtastic](/wwwroot/images/JJlogo-modified.png){width=50px}
+![Jobtastic]<img src="/wwwroot/images/JJlogo-modified.png" alt="Jobtastic" width="50" height="auto">
 
 ## Hauptfunktionen
 
