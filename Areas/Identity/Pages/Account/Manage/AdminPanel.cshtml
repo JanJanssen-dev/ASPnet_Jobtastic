@@ -5,10 +5,8 @@
     ViewData["ActivePage"] = "AdminPanel";
 }
 
-<div id="adminContent" class="card shadow-sm mb-4">
-    <div class="card-header bg-light">
-        <h5 class="mb-0">Administratorfunktionen</h5>
-    </div>
+@* <div id="adminContent" class="card"> *@
+
     <div class="card-body">
         <div class="text-center" id="loadingSpinner">
             <div class="spinner-border text-primary" role="status">
@@ -18,7 +16,7 @@
         </div>
         <div id="adminPanelContent"></div>
     </div>
-</div>
+@* </div> *@
 
 @section Scripts {
     <script>
@@ -44,7 +42,7 @@
                                 columnDefs: [
                                     { targets: 0, orderable: true }, // E-Mail
                                     { targets: 1, orderable: false }, // Rollen
-                                    { targets: 2, orderable: false, width: "150px" } // Aktionen-Spalte
+                                    { targets: 2, orderable: false, width: "40%" } // Aktionen-Spalte
                                 ]
                             });
                         }
