@@ -2,22 +2,65 @@
 @{
     var hasExternalLogins = (await SignInManager.GetExternalAuthenticationSchemesAsync()).Any();
 }
-<ul class="nav nav-pills flex-column">
-    @* Nur für Admins anzeigen *@
-    @if (User.IsInRole("Administrator"))
-    {
-        <li class="nav-item">
-            <a class="nav-link text-danger" asp-controller="Admin" asp-action="Index">Admin Panel</a>
-        </li>
-    }
 
-    <li class="nav-item"><a class="nav-link @ManageNavPages.IndexNavClass(ViewContext)" id="profile" asp-page="./Index">Profile</a></li>
-    <li class="nav-item"><a class="nav-link @ManageNavPages.EmailNavClass(ViewContext)" id="email" asp-page="./Email">Email</a></li>
-    <li class="nav-item"><a class="nav-link @ManageNavPages.ChangePasswordNavClass(ViewContext)" id="change-password" asp-page="./ChangePassword">Password</a></li>
+<ul class="nav nav-pills flex-column">
+    <li class="nav-item">
+        <a class="nav-link @ManageNavPages.IndexNavClass(ViewContext)" id="profile" asp-page="./Index">
+            <i class="fas fa-user me-2"></i> Profil
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link @ManageNavPages.EmailNavClass(ViewContext)" id="email" asp-page="./Email">
+            <i class="fas fa-envelope me-2"></i> E-Mail
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link @ManageNavPages.ChangePasswordNavClass(ViewContext)" id="change-password" asp-page="./ChangePassword">
+            <i class="fas fa-key me-2"></i> Passwort
+        </a>
+    </li>
     @if (hasExternalLogins)
     {
-        <li id="external-logins" class="nav-item"><a id="external-login" class="nav-link @ManageNavPages.ExternalLoginsNavClass(ViewContext)" asp-page="./ExternalLogins">External logins</a></li>
+        <li id="external-logins" class="nav-item">
+            <a id="external-login" class="nav-link @ManageNavPages.ExternalLoginsNavClass(ViewContext)" asp-page="./ExternalLogins">
+                <i class="fas fa-link me-2"></i> Externe Logins
+            </a>
+        </li>
     }
-    <li class="nav-item"><a class="nav-link @ManageNavPages.TwoFactorAuthenticationNavClass(ViewContext)" id="two-factor" asp-page="./TwoFactorAuthentication">Two-factor authentication</a></li>
-    <li class="nav-item"><a class="nav-link @ManageNavPages.PersonalDataNavClass(ViewContext)" id="personal-data" asp-page="./PersonalData">Personal data</a></li>
+    <li class="nav-item">
+        <a class="nav-link @ManageNavPages.TwoFactorAuthenticationNavClass(ViewContext)" id="two-factor" asp-page="./TwoFactorAuthentication">
+            <i class="fas fa-shield-alt me-2"></i> Zwei-Faktor-Authentifizierung
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link @ManageNavPages.PersonalDataNavClass(ViewContext)" id="personal-data" asp-page="./PersonalData">
+            <i class="fas fa-database me-2"></i> Persönliche Daten
+        </a>
+    </li>
+
+    @* Admin-Panel nur für Administratoren anzeigen *@
+
+    @if (User.IsInRole("Administrator"))
+    {
+        <li class="nav-item mt-4">
+            <div class="nav-divider mb-3"></div>
+            <a class="nav-link admin-link text-danger @ManageNavPages.AdminPanelNavClass(ViewContext)" id="admin-panel"  asp-page="./AdminPanel">
+                <i class="fas fa-cogs me-2"></i> Admin-Panel
+            </a>
+        </li>
+    }
 </ul>
+
+<style>
+    /* Trennlinie für den Admin-Bereich */
+    .nav-divider {
+        height: 1px;
+        background-color: #dee2e6;
+    }
+
+    /* Zusätzliche Stile für die Icons */
+    .nav-link i {
+        width: 20px;
+        text-align: center;
+    }
+</style>

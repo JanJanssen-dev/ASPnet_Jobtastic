@@ -1,0 +1,85 @@
+﻿@model List<ASPnet_Jobtastic.Controllers.UserRoleViewModel>
+@{
+    var allRoles = ViewBag.AllRoles as List<string>;
+}
+
+<!-- Versteckte Daten-Elemente für JavaScript -->
+<script id="allRolesData" type="application/json">
+    @Html.Raw(Json.Serialize(allRoles))
+</script>
+<script id="modelData" type="application/json">
+    @Html.Raw(Json.Serialize(Model))
+</script>
+
+<div class="card shadow-sm">
+    <div class="card-header bg-light">
+        <h5 class="mb-0">Benutzer & Rollen</h5>
+    </div>
+    <div class="card-body">
+        @if (Model != null && Model.Any())
+        {
+            <div class="table-responsive">
+                <table id="usersTable" class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>E-Mail</th>
+                            <th>Aktuelle Rollen</th>
+                            <th>Aktionen</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var user in Model)
+                        {
+                            <tr>
+                                <td>@user.Email</td>
+                                <td>
+                                    @if (user.Roles.Any())
+                                    {
+                                        @foreach (var role in user.Roles)
+                                        {
+                                            <span class="badge bg-info text-dark me-1">
+                                                @role
+                                                <a href="#" class="text-danger ms-1"
+                                                   onclick="confirmRemoveRole('@user.UserId', '@role', '@user.Email.Replace("'", "\\'"))')">
+                                                    <i class="fas fa-times"></i>
+                                                </a>
+                                            </span>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Keine Rollen zugewiesen</span>
+                                    }
+                                </td>
+                                <td>
+                                    <button type="button" class="btn btn-primary btn-sm"
+                                            onclick="showRoleManager('@user.UserId', '@user.Email.Replace("'", "\\'"))')">
+                                        <i class="fas fa-user-cog me-1"></i> Rollen verwalten
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-info text-center">
+                <p>Keine Benutzer verfügbar.</p>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Formular für Rolle entfernen -->
+<form id="removeRoleForm" method="post" asp-controller="Admin" asp-action="RemoveRole" style="display: none;">
+    <input type="hidden" id="removeUserId" name="userId" />
+    <input type="hidden" id="removeRole" name="role" />
+</form>
+
+<!-- Formular für Rolle hinzufügen -->
+<form id="addRoleForm" method="post" asp-controller="Admin" asp-action="AddRole" style="display: none;">
+    <input type="hidden" id="addUserId" name="userId" />
+    <input type="hidden" id="addRole" name="role" />
+</form>

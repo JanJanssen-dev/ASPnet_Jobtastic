@@ -1,106 +1,63 @@
-﻿@model List<ASPnet_Jobtastic.Controllers.UserRoleViewModel>
+﻿@page
+@model ASPnet_Jobtastic.Models.AdminPanelModel
 @{
-    ViewData["Title"] = "Benutzer & Rollen verwalten";
-    var allRoles = ViewBag.AllRoles as List<string>;
+    ViewData["Title"] = "Admin-Panel";
+    ViewData["ActivePage"] = "AdminPanel";
 }
 
-<div class="mt-4 p-5 bg-primary text-white rounded text-center">
-    <h1 class="display-4 mb-4">Benutzerverwaltung</h1>
-    <p>Verwalten Sie Benutzerkonten und Rollenzuweisungen für Jobtastic</p>
+<div id="adminContent" class="card shadow-sm mb-4">
+    <div class="card-header bg-light">
+        <h5 class="mb-0">Administratorfunktionen</h5>
+    </div>
+    <div class="card-body">
+        <div class="text-center" id="loadingSpinner">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Wird geladen...</span>
+            </div>
+            <p class="mt-2">Administratorfunktionen werden geladen...</p>
+        </div>
+        <div id="adminPanelContent"></div>
+    </div>
 </div>
-
-<section class="mt-4 p-4 bg-light rounded shadow-sm">
-    <h2 class="mb-4 text-center">Benutzer & Rollen</h2>
-
-    @if (Model != null && Model.Any())
-    {
-        <div class="table-responsive">
-            <table id="usersTable" class="table table-striped table-hover">
-                <thead>
-                    <tr>
-                        <th>E-Mail</th>
-                        <th>Aktuelle Rollen</th>
-                        <th>Aktionen</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var user in Model)
-                    {
-                        <tr>
-                            <td>@user.Email</td>
-                            <td>
-                                @if (user.Roles.Any())
-                                {
-                                    @foreach (var role in user.Roles)
-                                    {
-                                        <span class="badge bg-info text-dark me-1">
-                                            @role
-                                            <a href="#" class="text-danger ms-1"
-                                               onclick="confirmRemoveRole('@user.UserId', '@role', '@user.Email.Replace("'", "\\'"))')">
-                                                <i class="fas fa-times"></i>
-                                            </a>
-                                        </span>
-                                    }
-                                }
-                                else
-                                {
-                                    <span class="text-muted">Keine Rollen zugewiesen</span>
-                                }
-                            </td>
-                            <td>
-                                <button type="button" class="btn btn-primary btn-sm"
-                                        onclick="showRoleManager('@user.UserId', '@user.Email.Replace("'", "\\'"))')">
-                                    <i class="fas fa-user-cog me-1"></i> Rollen verwalten
-                                </button>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-    }
-    else
-    {
-        <div class="alert alert-info text-center">
-            <p>Keine Benutzer verfügbar.</p>
-        </div>
-    }
-</section>
-
-@* Hidden form for role removal *@
-<form id="removeRoleForm" method="post" asp-action="RemoveRole" style="display: none;">
-    <input type="hidden" id="removeUserId" name="userId" />
-    <input type="hidden" id="removeRole" name="role" />
-</form>
-
-@* Hidden form for role addition *@
-<form id="addRoleForm" method="post" asp-action="AddRole" style="display: none;">
-    <input type="hidden" id="addUserId" name="userId" />
-    <input type="hidden" id="addRole" name="role" />
-</form>
 
 @section Scripts {
     <script>
         $(document).ready(function() {
-            // DataTable initialisieren
-            $('#usersTable').DataTable({
-                language: {
-                    url: 'https://cdn.datatables.net/plug-ins/1.11.5/i18n/de-DE.json'
+            // Laden des Admin-Panel-Inhalts via AJAX
+            $.ajax({
+                url: '/Admin/PanelContent',
+                type: 'GET',
+                success: function(data) {
+                    $('#loadingSpinner').hide();
+                    $('#adminPanelContent').html(data);
+
+                    // DataTable initialisieren (nach dem Laden des Inhalts)
+                    setTimeout(() => {
+                        if ($('#usersTable').length) {
+                            $('#usersTable').DataTable({
+                                language: {
+                                    url: 'https://cdn.datatables.net/plug-ins/1.11.5/i18n/de-DE.json'
+                                },
+                                responsive: true,
+                                lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "Alle"]],
+                                order: [[0, 'asc']], // Nach E-Mail aufsteigend sortieren
+                                columnDefs: [
+                                    { targets: 0, orderable: true }, // E-Mail
+                                    { targets: 1, orderable: false }, // Rollen
+                                    { targets: 2, orderable: false, width: "150px" } // Aktionen-Spalte
+                                ]
+                            });
+                        }
+                    }, 100);
                 },
-                responsive: true,
-                lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "Alle"]],
-                order: [[0, 'asc']], // Nach E-Mail aufsteigend sortieren
-                columnDefs: [
-                    { targets: 0, orderable: true }, // E-Mail
-                    { targets: 1, orderable: false }, // Rollen
-                    { targets: 2, orderable: false, width: "150px" } // Aktionen-Spalte
-                ]
+                error: function() {
+                    $('#loadingSpinner').hide();
+                    $('#adminPanelContent').html('<div class="alert alert-danger">Fehler beim Laden der Administratorfunktionen.</div>');
+                }
             });
         });
 
-        /**
-         * Bestätigen des Entfernens einer Rolle
-         */
+        // Bestätigen des Entfernens einer Rolle
         function confirmRemoveRole(userId, role, email) {
             Swal.fire({
                 title: 'Rolle entfernen',
@@ -113,7 +70,6 @@
                 cancelButtonText: 'Abbrechen'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    // Formular ausfüllen und absenden
                     document.getElementById('removeUserId').value = userId;
                     document.getElementById('removeRole').value = role;
                     document.getElementById('removeRoleForm').submit();
@@ -121,16 +77,23 @@
             });
         }
 
-        /**
-         * Zeigt den Rollen-Manager für einen Benutzer
-         */
+        // Zeigt den Rollen-Manager für einen Benutzer
         function showRoleManager(userId, email) {
-            // Verfügbare Rollen aus dem ViewBag
-            const allRoles = @Html.Raw(Json.Serialize(allRoles));
+            // Diese Funktion wird nach dem AJAX-Laden des Inhalts definiert
+            // Die Werte für allRoles und model werden vom Server im HTML-Code geliefert
+            var allRolesElement = document.getElementById('allRolesData');
+            var modelElement = document.getElementById('modelData');
+
+            if (!allRolesElement || !modelElement) {
+                console.error("Rollen-Daten nicht gefunden");
+                return;
+            }
+
+            const allRoles = JSON.parse(allRolesElement.textContent);
+            const model = JSON.parse(modelElement.textContent);
 
             // Aktuelle Rollen des Benutzers ermitteln
             const userRoles = [];
-            const model = @Html.Raw(Json.Serialize(Model));
             const user = model.find(u => u.userId === userId);
 
             if (user) {

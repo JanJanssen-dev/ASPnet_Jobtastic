@@ -60,7 +60,32 @@ namespace ASPnet_Jobtastic.Controllers
             }
             return RedirectToAction("Index");
         }
+        // Action-Point für AdminPanel
+        [Authorize(Roles = "Administrator")]
+        public async Task<IActionResult> PanelContent()
+        {
+            var users = _userManager.Users.ToList();
+            var roles = _roleManager.Roles.ToList();
+
+            var model = new List<UserRoleViewModel>();
+
+            foreach (var user in users)
+            {
+                var userRoles = await _userManager.GetRolesAsync(user);
+                model.Add(new UserRoleViewModel
+                {
+                    UserId = user.Id,
+                    Email = user.Email,
+                    Roles = userRoles.ToList()
+                });
+            }
+
+            ViewBag.AllRoles = roles.Select(r => r.Name).ToList();
+            return PartialView("_AdminPanelContent", model);
+        }
     }
+
+
 
     public class UserRoleViewModel
     {
@@ -68,4 +93,6 @@ namespace ASPnet_Jobtastic.Controllers
         public string Email { get; set; } = string.Empty;
         public List<string> Roles { get; set; } = new();
     }
+
+
 }

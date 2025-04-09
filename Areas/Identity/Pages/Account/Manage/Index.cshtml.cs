@@ -52,14 +52,19 @@ namespace ASPnet_Jobtastic.Areas.Identity.Pages.Account.Manage
         public class InputModel
         {
             /// <summary>
+            ///     Neues Feld für Benutzernamen hinzugefügt
+            /// </summary>
+            [Required(ErrorMessage = "Benutzername ist erforderlich")]
+            [Display(Name = "Benutzername")]
+            public string UserName { get; set; }
+
+            /// <summary>
             ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
             ///     directly from your code. This API may change or be removed in future releases.
             /// </summary>
             [Phone]
-            [Display(Name = "Phone number")]
+            [Display(Name = "Telefonnummer")]
             public string PhoneNumber { get; set; }
-            
-
         }
 
         private async Task LoadAsync(IdentityUser user)
@@ -71,6 +76,7 @@ namespace ASPnet_Jobtastic.Areas.Identity.Pages.Account.Manage
 
             Input = new InputModel
             {
+                UserName = userName,  // Benutzernamen laden
                 PhoneNumber = phoneNumber
             };
         }
@@ -80,7 +86,7 @@ namespace ASPnet_Jobtastic.Areas.Identity.Pages.Account.Manage
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
             {
-                return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
+                return NotFound($"User mit ID '{_userManager.GetUserId(User)}' konnte nicht geladen werden.");
             }
 
             await LoadAsync(user);
@@ -92,7 +98,7 @@ namespace ASPnet_Jobtastic.Areas.Identity.Pages.Account.Manage
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
             {
-                return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
+                return NotFound($"User mit ID '{_userManager.GetUserId(User)}' konnte nicht geladen werden.");
             }
 
             if (!ModelState.IsValid)
@@ -101,19 +107,39 @@ namespace ASPnet_Jobtastic.Areas.Identity.Pages.Account.Manage
                 return Page();
             }
 
+            var userName = await _userManager.GetUserNameAsync(user);
+            if (Input.UserName != userName)
+            {
+                // Prüfen, ob der Benutzername bereits existiert
+                var existingUser = await _userManager.FindByNameAsync(Input.UserName);
+                if (existingUser != null && existingUser.Id != user.Id)
+                {
+                    ModelState.AddModelError("Input.UserName", "Dieser Benutzername wird bereits verwendet.");
+                    await LoadAsync(user);
+                    return Page();
+                }
+
+                var setUserNameResult = await _userManager.SetUserNameAsync(user, Input.UserName);
+                if (!setUserNameResult.Succeeded)
+                {
+                    StatusMessage = "Fehler: Benutzername konnte nicht aktualisiert werden.";
+                    return RedirectToPage();
+                }
+            }
+
             var phoneNumber = await _userManager.GetPhoneNumberAsync(user);
             if (Input.PhoneNumber != phoneNumber)
             {
                 var setPhoneResult = await _userManager.SetPhoneNumberAsync(user, Input.PhoneNumber);
                 if (!setPhoneResult.Succeeded)
                 {
-                    StatusMessage = "Unexpected error when trying to set phone number.";
+                    StatusMessage = "Fehler beim Aktualisieren der Telefonnummer.";
                     return RedirectToPage();
                 }
             }
 
             await _signInManager.RefreshSignInAsync(user);
-            StatusMessage = "Your profile has been updated";
+            StatusMessage = "Dein Profil wurde aktualisiert";
             return RedirectToPage();
         }
     }
