@@ -52,7 +52,7 @@ namespace ASPnet_Jobtastic.Controllers
                     j.JobLocation,
                     j.StartDate,
                     j.Salary,
-                    j.CompanyImage,
+                    CompanyImageBase64 = j.CompanyImage != null ? Convert.ToBase64String(j.CompanyImage) : null,
                     j.ContactName,
                     j.ContactEmail,
                     j.CompanyWebsite

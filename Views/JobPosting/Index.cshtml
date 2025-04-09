@@ -14,13 +14,13 @@
 
 <!-- Hauptcontainer für die gesamte Seite -->
 <section class="p-4 bg-light rounded shadow">
-    <!-- Header-Bereich mit Titel -->
+    <!-- Header-Bereich mit Logo und Titel -->
     <div class="p-4 mb-3 rounded-3 text-center shadow" style="background-color: #F2FDFF" role="banner" aria-label="Jobtastic Kopfbereich">
         <img src="~/images/JobtasticBannerNEW.png" alt="Jobtastic Logo" class="img-fluid" style="max-width: 100%; height: auto;">
         <h4 style="color: #0195ED">Jobpostings erstellen und die passenden Talente finden</h4>
     </div>
 
-    <!-- Admin-Filter (nur für Administratoren anzeigen) mit verbesserter Zugänglichkeit -->
+    <!-- Admin-Filter (nur für Administratoren anzeigen) -->
     @if (isAdmin)
     {
         <div class="mb-3 p-3 bg-light border rounded shadow" role="region" aria-label="Administrator-Optionen">
@@ -74,22 +74,23 @@
             @if (ownedJobs.Any())
             {
                 <div class="table-responsive">
-                    <table id="ownedJobsTable" class="table table-striped table-hover" width="100%">
+                    <table id="ownedJobsTable" class="table table-striped table-hover w-100">
                         <thead>
                             <tr>
-                                <th>Logo</th>
-                                <th>Job Titel</th>
-                                <th>Firma</th>
-                                <th>Kontakt</th>
-                                <th>Start am</th>
-                                <th>Erstellt am</th>
-                                <th>Aktionen</th>
+                                <th style="width: 60px">Logo</th>
+                                <th style="width: 20%">Job Titel</th>
+                                <th style="width: 15%">Firma</th>
+                                <th style="width: 15%">Kontakt</th>
+                                <th style="width: 10%">Start am</th>
+                                <th style="width: 15%">Erstellt am</th>
+                                <th style="width: 15%">Aktionen</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach (var job in ownedJobs)
                             {
                                 <tr>
+                                    <!-- Logo -->
                                     <td>
                                         @if (job.CompanyImage != null && job.CompanyImage.Length > 0)
                                         {
@@ -107,45 +108,29 @@
                                             @job.CreationDate.Value.ToShortDateString()
                                         }
                                     </td>
-                                    @* <td>
-                                        <div class="btn-group">
-                                            <button type="button" class="btn btn-outline-primary btn-sm" onclick="showJobDetails(@job.Id, '@job.JobTitle.Replace("'", "\\")')">
-                                                <i class="fas fa-eye"></i>
-                                            </button>
-                                            <a href="@Url.Action("EditJob", new { id = job.Id })" class="btn btn-primary btn-sm">
-                                                <i class="fas fa-edit"></i>
-                                            </a>
-                                            <a href="@Url.Action("ManageSharing", new { id = job.Id })" class="btn btn-info btn-sm">
-                                                <i class="fas fa-share-alt"></i>
-                                            </a>
-                                            <button type="button" class="btn btn-danger btn-sm" onclick="confirmDelete(@job.Id, '@job.JobTitle.Replace("'", "\\")')">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </div>
-                                    </td> *@
+                                    <!-- Aktions-Buttons -->
                                     <td>
                                         <div class="action-buttons">
-                                            <!-- Anzeigen Button -->
+                                            <!-- Details anzeigen -->
                                             <button type="button" class="action-btn btn-view action-tooltip" data-tooltip="Details anzeigen"
                                                     onclick="showJobDetails(@job.Id, '@job.JobTitle.Replace("'", "\\")')">
                                                 <i class="fas fa-eye"></i>
                                             </button>
 
-                                            <!-- Bearbeiten Button -->
+                                            <!-- Bearbeiten -->
                                             <a href="@Url.Action("EditJob", new { id = job.Id })" class="action-btn btn-edit action-tooltip" data-tooltip="Bearbeiten">
                                                 <i class="fas fa-edit"></i>
                                             </a>
 
-                                            <!-- Freigeben Button -->
+                                            <!-- Freigeben -->
                                             <a href="@Url.Action("ManageSharing", new { id = job.Id })" class="action-btn btn-share action-tooltip" data-tooltip="Freigeben">
                                                 <i class="fas fa-share-alt"></i>
                                             </a>
 
-                                            <!-- Löschen Button -->
+                                            <!-- Löschen -->
                                             <button type="button" class="action-btn btn-delete action-tooltip" data-tooltip="Löschen"
                                                     onclick="confirmDelete(@job.Id, '@job.JobTitle.Replace("'", "\\")')">
                                                 <i class="fas fa-trash"></i>
-                                                
                                             </button>
                                         </div>
                                     </td>
@@ -157,6 +142,7 @@
             }
             else
             {
+                <!-- Infobox wenn keine eigenen Jobs vorhanden -->
                 <div class="alert alert-info" role="alert">
                     <p>Du hast noch keine eigenen Jobangebote erstellt.</p>
                     <a asp-controller="JobPosting" asp-action="CreateJob" class="btn btn-primary mt-2">
@@ -171,23 +157,24 @@
             @if (sharedJobs.Any())
             {
                 <div class="table-responsive">
-                    <table id="sharedJobsTable" class="table table-striped table-hover" width="100%">
+                    <table id="sharedJobsTable" class="table table-striped table-hover w-100">
                         <thead>
                             <tr>
-                                <th>Logo</th>
-                                <th>Job Titel</th>
-                                <th>Firma</th>
-                                <th>Kontakt</th>
-                                <th>Start am</th>
-                                <th>Freigegeben von</th>
-                                <th>Rechte</th>
-                                <th>Aktionen</th>
+                                <th style="width: 60px">Logo</th>
+                                <th style="width: 20%">Job Titel</th>
+                                <th style="width: 10%">Firma</th>
+                                <th style="width: 10%">Kontakt</th>
+                                <th style="width: 10%">Start am</th>
+                                <th style="width: 10%">Freigegeben von</th>
+                                <th style="width: 15%">Rechte</th>
+                                <th style="width: 15%">Aktionen</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach (var job in sharedJobs)
                             {
                                 <tr>
+                                    <!-- Logo -->
                                     <td>
                                         @if (job.CompanyImage != null && job.CompanyImage.Length > 0)
                                         {
@@ -218,34 +205,16 @@
                                             <span class="badge bg-secondary">Nur Lesen</span>
                                         }
                                     </td>
-                                    @* <td>
-                                        <div class="btn-group">
-                                            <button type="button" class="btn btn-outline-primary btn-sm" onclick="showJobDetails(@job.Id, '@job.JobTitle.Replace("'", "\\")')">
-                                                <i class="fas fa-eye"></i>
-                                            </button>
-                                            @if (job.CanEdit)
-                                            {
-                                                <a href="@Url.Action("EditJob", new { id = job.Id })" class="btn btn-primary btn-sm">
-                                                    <i class="fas fa-edit"></i>
-                                                </a>
-                                            }
-                                            @if (job.CanDelete)
-                                            {
-                                                <button type="button" class="btn btn-danger btn-sm" onclick="confirmDelete(@job.Id, '@job.JobTitle.Replace("'", "\\")')">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            }
-                                        </div>
-                                    </td> *@
+                                    <!-- Aktions-Buttons -->
                                     <td>
                                         <div class="action-buttons">
-                                            <!-- Anzeigen Button -->
+                                            <!-- Details anzeigen -->
                                             <button type="button" class="action-btn btn-view action-tooltip" data-tooltip="Details anzeigen"
                                                     onclick="showJobDetails(@job.Id, '@job.JobTitle.Replace("'", "\\")')">
                                                 <i class="fas fa-eye"></i>
                                             </button>
 
-                                            <!-- Bearbeiten Button - nur wenn Berechtigung vorhanden -->
+                                            <!-- Bearbeiten - nur wenn Berechtigung vorhanden -->
                                             @if (job.CanEdit)
                                             {
                                                 <a href="@Url.Action("EditJob", new { id = job.Id })" class="action-btn btn-edit action-tooltip" data-tooltip="Bearbeiten">
@@ -253,7 +222,7 @@
                                                 </a>
                                             }
 
-                                            <!-- Löschen Button - nur wenn Berechtigung vorhanden -->
+                                            <!-- Löschen - nur wenn Berechtigung vorhanden -->
                                             @if (job.CanDelete)
                                             {
                                                 <button type="button" class="action-btn btn-delete action-tooltip" data-tooltip="Löschen"
@@ -271,16 +240,17 @@
             }
             else
             {
+                <!-- Infobox wenn keine freigegebenen Jobs vorhanden -->
                 <div class="alert alert-info" role="alert">
                     <p>Es wurden keine Jobs für dich freigegeben.</p>
                 </div>
             }
         </div>
-
         <!-- Tab: Admin-Jobs (nur wenn Admin und showAllJobs) -->
         @if (isAdmin && showAllJobs)
         {
             <div class="tab-pane fade" id="admin" role="tabpanel" aria-labelledby="admin-tab">
+                <!-- Warnung für Admin-Bereich -->
                 <div class="alert alert-warning" role="alert">
                     <i class="fas fa-exclamation-triangle me-2"></i>
                     Du siehst diese Jobs als Administrator. Bearbeite sie mit Vorsicht!
@@ -289,23 +259,24 @@
                 @if (adminJobs.Any())
                 {
                     <div class="table-responsive">
-                        <table id="adminJobsTable" class="table table-striped table-hover" width="100%">
+                        <table id="adminJobsTable" class="table table-striped table-hover w-100">
                             <thead>
                                 <tr>
-                                    <th>Logo</th>
-                                    <th>Job Titel</th>
-                                    <th>Firma</th>
-                                    <th>Kontakt</th>
-                                    <th>Start am</th>
-                                    <th>Erstellt am</th>
-                                    <th>Besitzer</th>
-                                    <th>Aktionen</th>
+                                    <th style="width: 60px">Logo</th>
+                                    <th style="width: 20%">Job Titel</th>
+                                    <th style="width: 10%">Firma</th>
+                                    <th style="width: 10%">Kontakt</th>
+                                    <th style="width: 10%">Start am</th>
+                                    <th style="width: 15%">Erstellt am</th>
+                                    <th style="width: 10%">Besitzer</th>
+                                    <th style="width: 15%">Aktionen</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach (var job in adminJobs)
                                 {
                                     <tr>
+                                        <!-- Logo -->
                                         <td>
                                             @if (job.CompanyImage != null && job.CompanyImage.Length > 0)
                                             {
@@ -326,33 +297,21 @@
                                         <td>
                                             <span class="badge bg-info">@job.OwnerUsername</span>
                                         </td>
-                                        @* <td>
-                                            <div class="btn-group">
-                                                <button type="button" class="btn btn-outline-primary btn-sm" onclick="showJobDetails(@job.Id, '@job.JobTitle.Replace("'", "\\")')">
-                                                    <i class="fas fa-eye"></i>
-                                                </button>
-                                                <a href="@Url.Action("EditJob", new { id = job.Id })" class="btn btn-primary btn-sm">
-                                                    <i class="fas fa-edit"></i>
-                                                </a>
-                                                <button type="button" class="btn btn-danger btn-sm" onclick="confirmDelete(@job.Id, '@job.JobTitle.Replace("'", "\\")')">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </div>
-                                        </td> *@
+                                        <!-- Aktions-Buttons -->
                                         <td>
                                             <div class="action-buttons">
-                                                <!-- Anzeigen Button -->
+                                                <!-- Details anzeigen -->
                                                 <button type="button" class="action-btn btn-view action-tooltip" data-tooltip="Details anzeigen"
                                                         onclick="showJobDetails(@job.Id, '@job.JobTitle.Replace("'", "\\")')">
                                                     <i class="fas fa-eye"></i>
                                                 </button>
 
-                                                <!-- Bearbeiten Button -->
+                                                <!-- Bearbeiten -->
                                                 <a href="@Url.Action("EditJob", new { id = job.Id })" class="action-btn btn-edit action-tooltip" data-tooltip="Bearbeiten">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
 
-                                                <!-- Löschen Button -->
+                                                <!-- Löschen -->
                                                 <button type="button" class="action-btn btn-delete action-tooltip" data-tooltip="Löschen"
                                                         onclick="confirmDelete(@job.Id, '@job.JobTitle.Replace("'", "\\")')">
                                                     <i class="fas fa-trash"></i>
@@ -367,6 +326,7 @@
                 }
                 else
                 {
+                    <!-- Infobox wenn keine Admin-Jobs vorhanden -->
                     <div class="alert alert-info" role="alert">
                         <p>Es gibt keine weiteren Jobs im System.</p>
                     </div>
@@ -406,14 +366,10 @@
                 responsive: true,
                 pageLength: 10,
                 lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "Alle"]],
-                columnDefs: [
-                    { targets: 0, orderable: false, width: "60px" }, // Logo
-                    { targets: -1, orderable: false, width: "150px" } // Aktionen
-                ],
+                // Feste Spaltenbreiten bestimmt durch die style-Attribute in der Tabelle
+                autoWidth: false,
                 deferRender: true,
-                processing: true,
-                autoWidth: false
-
+                processing: true
             };
 
             // Eigene Jobs Tabelle
@@ -421,7 +377,6 @@
                 $("#ownedJobsTable").DataTable({
                     ...commonConfig,
                     order: [[5, 'desc']] // Nach Erstellungsdatum sortieren
-
                 });
             }
 
@@ -512,12 +467,9 @@
          */
         function generateJobDetailHTML(job) {
         // Logo generieren
-                    const logoHtml = job.companyImage && job.companyImage.length > 0
-                        ? `<img src="data:image/png;base64,${arrayBufferToBase64(job.companyImage)}"
-                            alt="${job.companyName} Logo"
-                            class="img-fluid mb-3"
-                            style="max-height: 100px; max-width: 200px; object-fit: contain;">`
-                        : '';
+                    const logoHtml = job.companyImageBase64
+                        ? `<img src="data:image/png;base64,${job.companyImageBase64}" alt="${job.companyName} Logo" class="img-fluid mb-3" style="max-height: 100px; max-width: 200px; object-fit: contain;">`
+                        : 'Fehler!';
 
             // Gehalt formatieren
             const salary = job.salary > 0
@@ -628,11 +580,11 @@
         }
 
         /**
-         * Zeigt einen Bestätigungsdialog vor dem Löschen eines Jobs
+         * Zeigt einen verbesserten Bestätigungsdialog vor dem Löschen eines Jobs
          * param {number} id - Job-ID
          * param {string} jobTitle - Jobtitel für die Anzeige im Dialog
          */
-            function confirmDelete(id, jobTitle) {
+        function confirmDelete(id, jobTitle) {
             Swal.fire({
                 title: "Job löschen?",
                 text: `Möchtest du den Job "${jobTitle}" wirklich löschen?`,
@@ -649,6 +601,7 @@
                 buttonsStyling: false
             }).then((result) => {
                 if (result.isConfirmed) {
+                    // Formular absenden, wenn bestätigt
                     document.getElementById(`deleteForm-${id}`).submit();
 
                     Swal.fire({
@@ -661,14 +614,16 @@
                 }
             });
         }
-
     </script>
 }
+
 <style>
+    /* ===== Allgemeine Styles ===== */
+    html {
+        scrollbar-gutter: stable; /* Reserviert Platz für Scrollbar zur Vermeidung von Layout-Sprüngen */
+    }
 
-    /* CSS-Styles für JobPosting/Index.cshtml */
-
-    /* Verbesserter Schatten für Karten und Container */
+    /* Verbesserte Kartenansicht */
     .card, .shadow {
         box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important;
     }
@@ -688,28 +643,9 @@
             transform: scale(1.1);
         }
 
-    /* Button-Styling für bessere Erkennbarkeit */
-    .btn-group > .btn {
-        margin-right: 2px;
-    }
-
     /* Verbesserte TabPane-Darstellung */
     .tab-pane {
         padding: 1rem;
-    }
-
-    /* Responsive Anpassungen für mobile Geräte */
-    @@ media (max-width: 768px) {
-        .btn-group {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-
-        .btn-group > .btn {
-            margin: 2px;
-            flex: 1 0 auto;
-        }
     }
 
     /* SweetAlert2 Anpassungen für Jobdetails */
@@ -725,9 +661,9 @@
         border-radius: 4px;
         margin-top: 10px;
     }
-</style>
-<!-- CSS für die Button-Styling -->
-<style>
+
+    /* ===== Aktions-Buttons Styling ===== */
+
     /* Icon-Button-Styling */
     .action-btn {
         width: 38px;
@@ -745,6 +681,10 @@
         .action-btn:hover {
             transform: translateY(-3px);
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .action-btn:active {
+            transform: scale(0.95);
         }
 
         .action-btn i {
@@ -785,7 +725,7 @@
         flex-wrap: nowrap;
     }
 
-    /* Optional: Tooltip-Styling */
+    /* Tooltip-Styling */
     .action-tooltip {
         position: relative;
     }
@@ -805,4 +745,20 @@
             z-index: 100;
             margin-bottom: 5px;
         }
+
+    /* Responsive Anpassungen für mobile Geräte */
+    @@ media (max-width: 768px) {
+        .action-buttons {
+            justify-content: space-around;
+        }
+
+        .action-btn {
+            width: 32px;
+            height: 32px;
+        }
+
+            .action-btn i {
+                font-size: 0.875rem;
+            }
+    }
 </style>
