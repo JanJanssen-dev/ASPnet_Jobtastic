@@ -12,348 +12,797 @@
     bool showAllJobs = ViewBag.ShowAllJobs ?? false;
 }
 
-@* Hauptcontainer für die gesamte Seite *@
+<!-- Hauptcontainer für die gesamte Seite -->
 <section class="p-4 bg-light rounded shadow">
-    @* Header-Bereich mit Titel *@
-    <div class="p-4 mb-3 rounded-3 text-center shadow" style="background-color: #F2FDFF">
-        <img src="~/images/JobtasticBannerNEW.png" alt="Jobtastic" class="img-fluid" style="max-width: 100%; height: auto;">
+    <!-- Header-Bereich mit Titel -->
+    <div class="p-4 mb-3 rounded-3 text-center shadow" style="background-color: #F2FDFF" role="banner" aria-label="Jobtastic Kopfbereich">
+        <img src="~/images/JobtasticBannerNEW.png" alt="Jobtastic Logo" class="img-fluid" style="max-width: 100%; height: auto;">
         <h4 style="color: #0195ED">Jobpostings erstellen und die passenden Talente finden</h4>
     </div>
 
-    @* Admin-Filter (nur für Administratoren anzeigen) *@
+    <!-- Admin-Filter (nur für Administratoren anzeigen) mit verbesserter Zugänglichkeit -->
     @if (isAdmin)
     {
-        <div class="mb-3 p-3 bg-light border rounded shadow">
-            <form asp-action="Index" method="get" class="d-flex align-items-center">
+        <div class="mb-3 p-3 bg-light border rounded shadow" role="region" aria-label="Administrator-Optionen">
+            <form asp-action="Index" method="get" class="d-flex flex-wrap align-items-center">
                 <div class="form-check form-switch me-3">
-                    <input class="form-check-input" type="checkbox" id="showAllJobs" name="showAllJobs" value="true" @(showAllJobs ? "checked" : "")>
-                    <label class="form-check-label" for="showAllJobs">Alle Jobs im System anzeigen</label>
+                    <input class="form-check-input" type="checkbox" id="showAllJobs" name="showAllJobs" value="true" @(showAllJobs ? "checked" : "")
+                           aria-labelledby="showAllJobsLabel">
+                    <label class="form-check-label" for="showAllJobs" id="showAllJobsLabel">Alle Jobs im System anzeigen</label>
                 </div>
-                <div class="text-muted ms-3">
-                    <i class="bi bi-info-circle"></i>
-                    Als Administrator kannst du zwischen deinen eigenen Jobs und allen Jobs im System wechseln.
+                <div class="text-muted ms-md-3 mt-2 mt-md-0">
+                    <i class="bi bi-info-circle" aria-hidden="true"></i>
+                    <span>Als Administrator kannst du zwischen deinen eigenen Jobs und allen Jobs im System wechseln.</span>
                 </div>
             </form>
         </div>
-    } 
+    }
 
-
-    @* Button zum Erstellen eines neuen Jobs (oberer Button) *@
+    <!-- Button zum Erstellen eines neuen Jobs (oberer Button) -->
     <div class="text-end mb-3">
-        <a class="btn btn-outline-primary shadow" asp-controller="JobPosting" asp-action="CreateJob">Neuen Job anlegen</a>
+        <a class="btn btn-outline-primary shadow" asp-controller="JobPosting" asp-action="CreateJob">
+            <i class="fas fa-plus-circle me-2" aria-hidden="true"></i>Neuen Job anlegen
+        </a>
     </div>
 
-    @* #region EIGENE JOBS *@
-    <section class="mt-3 p-4 bg-light rounded shadow">
-        <h3 class="mb-3">Deine erstellten Jobs</h3>
-        @if (ownedJobs.Any())
+    <!-- Tabs für verschiedene Job-Kategorien -->
+    <ul class="nav nav-tabs" id="jobTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="owned-tab" data-bs-toggle="tab" data-bs-target="#owned" type="button" role="tab" aria-controls="owned" aria-selected="true">
+                Eigene Jobs <span class="badge bg-primary">@ownedJobs.Count</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="shared-tab" data-bs-toggle="tab" data-bs-target="#shared" type="button" role="tab" aria-controls="shared" aria-selected="false">
+                Freigegebene Jobs <span class="badge bg-info">@sharedJobs.Count</span>
+            </button>
+        </li>
+        @if (isAdmin && showAllJobs)
         {
-            @* Tabelle für eigene Jobangebote *@
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>Logo</th>
-                        <th>Job Titel</th>
-                        <th>Company</th>
-                        <th>ASP</th>
-                        <th>Start am</th>
-                        <th>Erstellt am</th>
-                        <th>Letzte Änderung</th>
-                        <th>Aktionen</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var item in ownedJobs)
-                    {
-                        <tr>
-                            @* Unternehmenslogo aus der Datenbank anzeigen *@
-                            <td>
-                                @if (item.CompanyImage != null && item.CompanyImage.Length > 0)
-                                {
-                                    var base64 = Convert.ToBase64String(item.CompanyImage);
-                                    <img src="data:image/png;base64,@base64" alt="Logo" style="max-width: 80px; max-height: 40px;" />
-                                }
-                            </td>
-                            <td class="align-middle">@item.JobTitle</td>
-                            <td class="align-middle">@item.CompanyName</td>
-                            <td class="align-middle">@item.ContactName</td>
-                            <td class="align-middle">@item.StartDate.ToShortDateString()</td>
-                            <td class="align-middle">
-                                @if (item.CreationDate.HasValue)
-                                {
-                                    @item.CreationDate.Value.ToShortDateString()
-                                }
-                            </td>
-                            <td class="align-middle">
-                                @if (item.ChangeDate.HasValue)
-                                {
-                                    <small>
-                                        @item.ChangeDate.Value.ToShortDateString()
-                                        <br />von @item.ChangeUserName
-                                    </small>
-                                }
-                            </td>
-                            @* Aktions-Buttons für eigene Jobs (alle Rechte) *@
-                            <td class="align-middle">
-                                <div class="btn-group" role="group">
-                                    @* Bearbeitungs-Button *@
-                                    <a asp-action="EditJob" asp-route-id="@item.Id" class="btn btn-primary btn-sm shadow">Bearbeiten</a>
-
-                                    @* Freigabe-Button (nur bei eigenen Jobs) *@
-                                    <a asp-action="ManageSharing" asp-route-id="@item.Id" class="btn btn-info btn-sm shadow">Freigeben</a>
-
-                                    @* Lösch-Button mit Bestätigungsdialog *@
-                                    <form asp-action="DeleteJob" asp-route-id="@item.Id" method="post" id="deleteForm-@item.Id">
-                                        <button type="button" class="btn btn-danger btn-sm shadow" onclick="confirmDelete(@item.Id, '@item.JobTitle')">Löschen</button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="admin-tab" data-bs-toggle="tab" data-bs-target="#admin" type="button" role="tab" aria-controls="admin" aria-selected="false">
+                    Admin-Ansicht <span class="badge bg-warning text-dark">@adminJobs.Count</span>
+                </button>
+            </li>
         }
-        else
+    </ul>
+
+    <!-- Tab-Inhalte für verschiedene Job-Kategorien -->
+    <div class="tab-content p-3 bg-white border border-top-0 rounded-bottom shadow-sm mb-4" id="jobTabsContent">
+        <!-- Tab: Eigene Jobs -->
+        <div class="tab-pane fade show active" id="owned" role="tabpanel" aria-labelledby="owned-tab">
+            @if (ownedJobs.Any())
+            {
+                <div class="table-responsive">
+                    <table id="ownedJobsTable" class="table table-striped table-hover" width="100%">
+                        <thead>
+                            <tr>
+                                <th>Logo</th>
+                                <th>Job Titel</th>
+                                <th>Firma</th>
+                                <th>Kontakt</th>
+                                <th>Start am</th>
+                                <th>Erstellt am</th>
+                                <th>Aktionen</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var job in ownedJobs)
+                            {
+                                <tr>
+                                    <td>
+                                        @if (job.CompanyImage != null && job.CompanyImage.Length > 0)
+                                        {
+                                            var base64 = Convert.ToBase64String(job.CompanyImage);
+                                            <img src="data:image/png;base64,@base64" alt="@job.CompanyName Logo" class="img-fluid" style="max-width: 60px; max-height: 40px;">
+                                        }
+                                    </td>
+                                    <td>@job.JobTitle</td>
+                                    <td>@job.CompanyName</td>
+                                    <td>@job.ContactName</td>
+                                    <td data-order="@job.StartDate.ToString("yyyy-MM-dd")">@job.StartDate.ToShortDateString()</td>
+                                    <td data-order="@(job.CreationDate?.ToString("yyyy-MM-dd") ?? "")">
+                                        @if (job.CreationDate.HasValue)
+                                        {
+                                            @job.CreationDate.Value.ToShortDateString()
+                                        }
+                                    </td>
+                                    @* <td>
+                                        <div class="btn-group">
+                                            <button type="button" class="btn btn-outline-primary btn-sm" onclick="showJobDetails(@job.Id, '@job.JobTitle.Replace("'", "\\")')">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <a href="@Url.Action("EditJob", new { id = job.Id })" class="btn btn-primary btn-sm">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a href="@Url.Action("ManageSharing", new { id = job.Id })" class="btn btn-info btn-sm">
+                                                <i class="fas fa-share-alt"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-danger btn-sm" onclick="confirmDelete(@job.Id, '@job.JobTitle.Replace("'", "\\")')">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td> *@
+                                    <td>
+                                        <div class="action-buttons">
+                                            <!-- Anzeigen Button -->
+                                            <button type="button" class="action-btn btn-view action-tooltip" data-tooltip="Details anzeigen"
+                                                    onclick="showJobDetails(@job.Id, '@job.JobTitle.Replace("'", "\\")')">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+
+                                            <!-- Bearbeiten Button -->
+                                            <a href="@Url.Action("EditJob", new { id = job.Id })" class="action-btn btn-edit action-tooltip" data-tooltip="Bearbeiten">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+
+                                            <!-- Freigeben Button -->
+                                            <a href="@Url.Action("ManageSharing", new { id = job.Id })" class="action-btn btn-share action-tooltip" data-tooltip="Freigeben">
+                                                <i class="fas fa-share-alt"></i>
+                                            </a>
+
+                                            <!-- Löschen Button -->
+                                            <button type="button" class="action-btn btn-delete action-tooltip" data-tooltip="Löschen"
+                                                    onclick="confirmDelete(@job.Id, '@job.JobTitle.Replace("'", "\\")')">
+                                                <i class="fas fa-trash"></i>
+                                                
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-info" role="alert">
+                    <p>Du hast noch keine eigenen Jobangebote erstellt.</p>
+                    <a asp-controller="JobPosting" asp-action="CreateJob" class="btn btn-primary mt-2">
+                        <i class="fas fa-plus-circle me-2"></i>Erstelle jetzt dein erstes Jobangebot
+                    </a>
+                </div>
+            }
+        </div>
+
+        <!-- Tab: Freigegebene Jobs -->
+        <div class="tab-pane fade" id="shared" role="tabpanel" aria-labelledby="shared-tab">
+            @if (sharedJobs.Any())
+            {
+                <div class="table-responsive">
+                    <table id="sharedJobsTable" class="table table-striped table-hover" width="100%">
+                        <thead>
+                            <tr>
+                                <th>Logo</th>
+                                <th>Job Titel</th>
+                                <th>Firma</th>
+                                <th>Kontakt</th>
+                                <th>Start am</th>
+                                <th>Freigegeben von</th>
+                                <th>Rechte</th>
+                                <th>Aktionen</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var job in sharedJobs)
+                            {
+                                <tr>
+                                    <td>
+                                        @if (job.CompanyImage != null && job.CompanyImage.Length > 0)
+                                        {
+                                            var base64 = Convert.ToBase64String(job.CompanyImage);
+                                            <img src="data:image/png;base64,@base64" alt="@job.CompanyName Logo" class="img-fluid" style="max-width: 60px; max-height: 40px;">
+                                        }
+                                    </td>
+                                    <td>@job.JobTitle</td>
+                                    <td>@job.CompanyName</td>
+                                    <td>@job.ContactName</td>
+                                    <td data-order="@job.StartDate.ToString("yyyy-MM-dd")">@job.StartDate.ToShortDateString()</td>
+                                    <td>@job.OwnerUsername</td>
+                                    <td>
+                                        @if (job.CanEdit && job.CanDelete)
+                                        {
+                                            <span class="badge bg-success">Vollzugriff</span>
+                                        }
+                                        else if (job.CanEdit)
+                                        {
+                                            <span class="badge bg-primary">Bearbeiten</span>
+                                        }
+                                        else if (job.CanDelete)
+                                        {
+                                            <span class="badge bg-danger">Löschen</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">Nur Lesen</span>
+                                        }
+                                    </td>
+                                    @* <td>
+                                        <div class="btn-group">
+                                            <button type="button" class="btn btn-outline-primary btn-sm" onclick="showJobDetails(@job.Id, '@job.JobTitle.Replace("'", "\\")')">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            @if (job.CanEdit)
+                                            {
+                                                <a href="@Url.Action("EditJob", new { id = job.Id })" class="btn btn-primary btn-sm">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                            }
+                                            @if (job.CanDelete)
+                                            {
+                                                <button type="button" class="btn btn-danger btn-sm" onclick="confirmDelete(@job.Id, '@job.JobTitle.Replace("'", "\\")')">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            }
+                                        </div>
+                                    </td> *@
+                                    <td>
+                                        <div class="action-buttons">
+                                            <!-- Anzeigen Button -->
+                                            <button type="button" class="action-btn btn-view action-tooltip" data-tooltip="Details anzeigen"
+                                                    onclick="showJobDetails(@job.Id, '@job.JobTitle.Replace("'", "\\")')">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+
+                                            <!-- Bearbeiten Button - nur wenn Berechtigung vorhanden -->
+                                            @if (job.CanEdit)
+                                            {
+                                                <a href="@Url.Action("EditJob", new { id = job.Id })" class="action-btn btn-edit action-tooltip" data-tooltip="Bearbeiten">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                            }
+
+                                            <!-- Löschen Button - nur wenn Berechtigung vorhanden -->
+                                            @if (job.CanDelete)
+                                            {
+                                                <button type="button" class="action-btn btn-delete action-tooltip" data-tooltip="Löschen"
+                                                        onclick="confirmDelete(@job.Id, '@job.JobTitle.Replace("'", "\\")')">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-info" role="alert">
+                    <p>Es wurden keine Jobs für dich freigegeben.</p>
+                </div>
+            }
+        </div>
+
+        <!-- Tab: Admin-Jobs (nur wenn Admin und showAllJobs) -->
+        @if (isAdmin && showAllJobs)
         {
-            @* Info-Meldung, wenn keine eigenen Jobs vorhanden sind *@
-            <div class="alert alert-info shadow">
-                Du hast noch keine eigenen Jobangebote erstellt.
-                <a asp-controller="JobPosting" asp-action="CreateJob">Erstelle jetzt dein erstes Jobangebot</a>
+            <div class="tab-pane fade" id="admin" role="tabpanel" aria-labelledby="admin-tab">
+                <div class="alert alert-warning" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Du siehst diese Jobs als Administrator. Bearbeite sie mit Vorsicht!
+                </div>
+
+                @if (adminJobs.Any())
+                {
+                    <div class="table-responsive">
+                        <table id="adminJobsTable" class="table table-striped table-hover" width="100%">
+                            <thead>
+                                <tr>
+                                    <th>Logo</th>
+                                    <th>Job Titel</th>
+                                    <th>Firma</th>
+                                    <th>Kontakt</th>
+                                    <th>Start am</th>
+                                    <th>Erstellt am</th>
+                                    <th>Besitzer</th>
+                                    <th>Aktionen</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var job in adminJobs)
+                                {
+                                    <tr>
+                                        <td>
+                                            @if (job.CompanyImage != null && job.CompanyImage.Length > 0)
+                                            {
+                                                var base64 = Convert.ToBase64String(job.CompanyImage);
+                                                <img src="data:image/png;base64,@base64" alt="@job.CompanyName Logo" class="img-fluid" style="max-width: 60px; max-height: 40px;">
+                                            }
+                                        </td>
+                                        <td>@job.JobTitle</td>
+                                        <td>@job.CompanyName</td>
+                                        <td>@job.ContactName</td>
+                                        <td data-order="@job.StartDate.ToString("yyyy-MM-dd")">@job.StartDate.ToShortDateString()</td>
+                                        <td data-order="@(job.CreationDate?.ToString("yyyy-MM-dd") ?? "")">
+                                            @if (job.CreationDate.HasValue)
+                                            {
+                                                @job.CreationDate.Value.ToShortDateString()
+                                            }
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-info">@job.OwnerUsername</span>
+                                        </td>
+                                        @* <td>
+                                            <div class="btn-group">
+                                                <button type="button" class="btn btn-outline-primary btn-sm" onclick="showJobDetails(@job.Id, '@job.JobTitle.Replace("'", "\\")')">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                                <a href="@Url.Action("EditJob", new { id = job.Id })" class="btn btn-primary btn-sm">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <button type="button" class="btn btn-danger btn-sm" onclick="confirmDelete(@job.Id, '@job.JobTitle.Replace("'", "\\")')">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td> *@
+                                        <td>
+                                            <div class="action-buttons">
+                                                <!-- Anzeigen Button -->
+                                                <button type="button" class="action-btn btn-view action-tooltip" data-tooltip="Details anzeigen"
+                                                        onclick="showJobDetails(@job.Id, '@job.JobTitle.Replace("'", "\\")')">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+
+                                                <!-- Bearbeiten Button -->
+                                                <a href="@Url.Action("EditJob", new { id = job.Id })" class="action-btn btn-edit action-tooltip" data-tooltip="Bearbeiten">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+
+                                                <!-- Löschen Button -->
+                                                <button type="button" class="action-btn btn-delete action-tooltip" data-tooltip="Löschen"
+                                                        onclick="confirmDelete(@job.Id, '@job.JobTitle.Replace("'", "\\")')">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-info" role="alert">
+                        <p>Es gibt keine weiteren Jobs im System.</p>
+                    </div>
+                }
             </div>
         }
-    </section>
-    @* #endregion EIGENE JOBS *@
+    </div>
 
-    @* #region FREIGEGEBENE JOBS *@
-    <section class="mt-4 p-4 bg-light rounded shadow">
-        <h3 class="mb-3">Für dich freigegebene Jobs</h3>
-        @if (sharedJobs.Any())
-        {
-            @* Tabelle für freigegebene Jobangebote *@
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>Logo</th>
-                        <th>Job Titel</th>
-                        <th>Company</th>
-                        <th>ASP</th>
-                        <th>Start am</th>
-                        <th>Erstellt am</th>
-                        <th>Freigegeben von</th>
-                        <th>Aktionen</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var item in sharedJobs)
-                    {
-                        <tr>
-                            @* Unternehmenslogo aus der Datenbank anzeigen *@
-                            <td>
-                                @if (item.CompanyImage != null && item.CompanyImage.Length > 0)
-                                {
-                                    var base64 = Convert.ToBase64String(item.CompanyImage);
-                                    <img src="data:image/png;base64,@base64" alt="Logo" style="max-width: 80px; max-height: 40px;" />
-                                }
-                            </td>
-                            <td class="align-middle">@item.JobTitle</td>
-                            <td class="align-middle">@item.CompanyName</td>
-                            <td class="align-middle">@item.ContactName</td>
-                            <td class="align-middle">@item.StartDate.ToShortDateString()</td>
-                            <td class="align-middle">
-                                @if (item.CreationDate.HasValue)
-                                {
-                                    @item.CreationDate.Value.ToShortDateString()
-                                }
-                            </td>
-                            @* Eigentümer des Jobs bei freigegebenen Jobs anzeigen *@
-                            <td class="align-middle">@item.OwnerUsername</td>
-                            @* Aktions-Buttons abhängig von den Berechtigungen anzeigen *@
-                            <td class="align-middle">
-                                <div class="btn-group" role="group">
-                                    @* Bearbeitungs-Button nur anzeigen, wenn Berechtigung vorhanden *@
-                                    @if (item.CanEdit)
-                                    {
-                                        <a asp-action="EditJob" asp-route-id="@item.Id" class="btn btn-primary btn-sm">Bearbeiten</a>
-                                    }
-                                    @* Lösch-Button nur anzeigen, wenn Berechtigung vorhanden *@
-                                    @if (item.CanDelete)
-                                    {
-                                        <form asp-action="DeleteJob" asp-route-id="@item.Id" method="post" id="deleteForm-@item.Id">
-                                            <button type="button" class="btn btn-danger btn-sm" onclick="confirmDelete(@item.Id, '@item.JobTitle')">Löschen</button>
-                                        </form>
-                                    }
-                                    @* "Nur Leserechte"-Badge anzeigen, wenn keine Bearbeitungs- oder Löschrechte vorhanden *@
-                                    @if (!item.CanEdit && !item.CanDelete)
-                                    {
-                                        <span class="badge bg-secondary">Nur Leserechte</span>
-                                    }
-                                </div>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        }
-        else
-        {
-            @* Info-Meldung, wenn keine freigegebenen Jobs vorhanden sind *@
-            <div class="alert alert-info shadow-sm">
-                Es wurden keine Jobs für dich freigegeben.
-            </div>
-        }
-    </section>
-    @* #endregion FREIGEGEBENE JOBS *@
-
-    @* #region ADMIN JOBS - Nur anzeigen, wenn der Benutzer Admin ist und den Filter aktiviert hat *@
-    @if (isAdmin && showAllJobs && adminJobs.Any())
+    <!-- Versteckte Formulare für das Löschen von Jobs -->
+    @foreach (var job in Model)
     {
-        <section class="mt-4 p-4 bg-warning bg-opacity-10 rounded shadow-sm">
-            <h3 class="mb-3">
-                <span class="badge bg-warning text-dark me-2">Admin</span>
-                Alle anderen Jobs im System
-            </h3>
-            <div class="alert alert-warning">
-                <i class="bi bi-exclamation-triangle-fill"></i>
-                Du siehst diese Jobs als Administrator. Bearbeite sie mit Vorsicht!
-            </div>
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>Logo</th>
-                        <th>Job Titel</th>
-                        <th>Company</th>
-                        <th>ASP</th>
-                        <th>Start am</th>
-                        <th>Erstellt am</th>
-                        <th>Besitzer</th>
-                        <th>Aktionen</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var item in adminJobs)
-                    {
-                        <tr>
-                            @* Unternehmenslogo aus der Datenbank anzeigen *@
-                            <td>
-                                @if (item.CompanyImage != null && item.CompanyImage.Length > 0)
-                                {
-                                    var base64 = Convert.ToBase64String(item.CompanyImage);
-                                    <img src="data:image/png;base64,@base64" alt="Logo" style="max-width: 80px; max-height: 40px;" />
-                                }
-                            </td>
-                            <td class="align-middle">@item.JobTitle</td>
-                            <td class="align-middle">@item.CompanyName</td>
-                            <td class="align-middle">@item.ContactName</td>
-                            <td class="align-middle">@item.StartDate.ToShortDateString()</td>
-                            <td class="align-middle">
-                                @if (item.CreationDate.HasValue)
-                                {
-                                    @item.CreationDate.Value.ToShortDateString()
-                                }
-                            </td>
-                            @* Eigentümer des Jobs anzeigen *@
-                            <td class="align-middle">
-                                <span class="badge bg-info">@item.OwnerUsername</span>
-                            </td>
-                            @* Aktions-Buttons für Administratoren *@
-                            <td class="align-middle">
-                                <div class="btn-group" role="group">
-                                    @* Bearbeitungs-Button *@
-                                    <a asp-action="EditJob" asp-route-id="@item.Id" class="btn btn-primary btn-sm">Bearbeiten</a>
-
-                                    @* Lösch-Button mit Bestätigungsdialog *@
-                                    <form asp-action="DeleteJob" asp-route-id="@item.Id" method="post" id="deleteForm-@item.Id">
-                                        <button type="button" class="btn btn-danger btn-sm" onclick="confirmDelete(@item.Id, '@item.JobTitle')">Löschen</button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </section>
+        <form asp-action="DeleteJob" asp-route-id="@job.Id" method="post" id="deleteForm-@job.Id" style="display: none;">
+            @Html.AntiForgeryToken()
+        </form>
     }
-    @* #endregion ADMIN JOBS *@
 
-    @* Button zum Erstellen eines neuen Jobs (unterer Button) *@
+    <!-- Button zum Erstellen eines neuen Jobs (unterer Button) -->
     <div class="text-end mt-3">
-        <a class="btn btn-outline-primary" asp-controller="JobPosting" asp-action="CreateJob">Neuen Job anlegen</a>
+        <a class="btn btn-outline-primary" asp-controller="JobPosting" asp-action="CreateJob">
+            <i class="fas fa-plus-circle me-2"></i>Neuen Job anlegen
+        </a>
     </div>
 </section>
 
-@* #region JAVASCRIPT *@
 @section Scripts {
-    @* JavaScript-Funktion zur Bestätigung des Löschvorgangs *@
     <script>
-        /**
-         * Zeigt einen Bestätigungsdialog an, bevor ein Job gelöscht wird
-         * Parameter:
-         * - id: Die ID des zu löschenden Jobs
-         * - jobTitle: Der Titel des Jobs für die Anzeige im Dialog
-         */
-        function confirmDelete(id, jobTitle) {
-            Swal.fire({
-                title: "Bist du sicher?",
-                text: `Möchtest du den Job "${jobTitle}" wirklich löschen?`,
-                icon: "info",
-                showCancelButton: true,
-                confirmButtonColor: "#3085d6",
-                cancelButtonColor: "#d33",
-                confirmButtonText: "Ja, löschen!",
-                cancelButtonText: "Abbrechen"
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    // Formular absenden, wenn Benutzer bestätigt
-                    document.getElementById(`deleteForm-${id}`).submit();
+        // Cache für Jobdetails
+        const jobDetailsCache = {};
 
-                    // Erfolgsmeldung (wird angezeigt, wenn das Formular gesendet wurde)
-                    Swal.fire({
-                        title: "Gelöscht!",
-                        text: "Der Job wurde erfolgreich gelöscht.",
-                        icon: "success",
-                        timer: 2000,
-                        showConfirmButton: false
-                    });
-                }
-            });
-        }
-        /**
-         * Event-Listener für die Admin-Ansicht Checkbox
-         * Wird ausgeführt, sobald die DOM-Struktur der Seite vollständig geladen ist mit Sweetalerts2
-         */
-        document.addEventListener('DOMContentLoaded', function() {
-            // Die Checkbox für "Alle Jobs anzeigen" im DOM finden
+        // DataTables initialisieren, sobald DOM bereit ist
+        $(document).ready(function() {
+            // Gemeinsame Konfiguration für alle Tabellen
+            const commonConfig = {
+                language: {
+                    url: 'https://cdn.datatables.net/plug-ins/1.11.5/i18n/de-DE.json'
+                },
+                responsive: true,
+                pageLength: 10,
+                lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "Alle"]],
+                columnDefs: [
+                    { targets: 0, orderable: false, width: "60px" }, // Logo
+                    { targets: -1, orderable: false, width: "150px" } // Aktionen
+                ],
+                deferRender: true,
+                processing: true,
+                autoWidth: false
+
+            };
+
+            // Eigene Jobs Tabelle
+            if ($("#ownedJobsTable").length && $("#ownedJobsTable tbody tr").length > 0) {
+                $("#ownedJobsTable").DataTable({
+                    ...commonConfig,
+                    order: [[5, 'desc']] // Nach Erstellungsdatum sortieren
+
+                });
+            }
+
+            // Freigegebene Jobs Tabelle
+            if ($("#sharedJobsTable").length && $("#sharedJobsTable tbody tr").length > 0) {
+                $("#sharedJobsTable").DataTable({
+                    ...commonConfig,
+                    order: [[4, 'asc']] // Nach Startdatum sortieren
+                });
+            }
+
+            // Admin Jobs Tabelle
+            if ($("#adminJobsTable").length && $("#adminJobsTable tbody tr").length > 0) {
+                $("#adminJobsTable").DataTable({
+                    ...commonConfig,
+                    order: [[5, 'desc']] // Nach Erstellungsdatum sortieren
+                });
+            }
+
+            // Event-Handler für Admin-Ansicht Checkbox
             const showAllJobsCheckbox = document.getElementById('showAllJobs');
-
-            // Nur fortfahren, wenn die Checkbox existiert (Fehlerbehandlung)
             if (showAllJobsCheckbox) {
-                // Event-Handler für Änderungen der Checkbox definieren
                 showAllJobsCheckbox.onchange = function(e) {
-                    // Das Standard-Verhalten der Checkbox verhindern
                     e.preventDefault();
-
-                    // Formular-Referenz speichern
                     const form = this.form;
 
-                    // SweetAlert anzeigen
                     Swal.fire({
                         position: "top-end",
                         icon: "success",
                         title: this.checked ? "Admin-Ansicht aktiviert" : "Admin-Ansicht deaktiviert",
                         showConfirmButton: false,
                         timer: 2000,
-                        allowOutsideClick: false,  // Verhindert, dass der Alert durch Klicks geschlossen wird
+                        allowOutsideClick: false,
                         willClose: () => {
-                            // Formular absenden, wenn der Alert geschlossen wird
                             form.submit();
                         }
                     });
                 };
             }
         });
-    
+
+        /**
+         * Holt Jobdetails vom Server
+         * param {number} jobId - ID des Jobs
+         * returns {Promise<Object>} Job-Detailinformationen
+         */
+        async function fetchJobDetails(jobId) {
+            // Wenn Details im Cache, direkt zurückgeben
+            if (jobDetailsCache[jobId]) {
+                return jobDetailsCache[jobId];
+            }
+
+            try {
+                Swal.fire({
+                    title: 'Laden...',
+                    text: 'Jobdetails werden geladen',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                const response = await fetch(`/Home/GetJobDetails/${jobId}`);
+                if (!response.ok) {
+                    throw new Error('Jobdetails konnten nicht geladen werden');
+                }
+
+                const jobDetails = await response.json();
+
+                // Im Cache speichern
+                jobDetailsCache[jobId] = jobDetails;
+
+                return jobDetails;
+            } catch (error) {
+                console.error('Fehler beim Laden der Jobdetails:', error);
+                return {
+                    jobTitle: 'Fehler',
+                    jobDescription: 'Keine Details verfügbar',
+                    companyName: 'Unbekannt'
+                };
+            }
+        }
+
+        /**
+         * Generiert HTML für Jobdetail-Modal
+         * param {Object} job - Jobobjekt
+         * returns {string} Generiertes HTML
+         */
+        function generateJobDetailHTML(job) {
+        // Logo generieren
+                    const logoHtml = job.companyImage && job.companyImage.length > 0
+                        ? `<img src="data:image/png;base64,${arrayBufferToBase64(job.companyImage)}"
+                            alt="${job.companyName} Logo"
+                            class="img-fluid mb-3"
+                            style="max-height: 100px; max-width: 200px; object-fit: contain;">`
+                        : '';
+
+            // Gehalt formatieren
+            const salary = job.salary > 0
+                ? new Intl.NumberFormat('de-DE', {
+                    style: 'currency',
+                    currency: 'EUR',
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0
+                }).format(job.salary)
+                : 'Nach Vereinbarung';
+
+            // Kontaktinformationen generieren
+            const contactHtml = `
+                <h5 class="mt-3">Kontakt</h5>
+                ${job.contactName ? `<p><strong>Ansprechpartner:</strong> ${job.contactName}</p>` : ''}
+                ${job.contactEmail ? `<p><strong>E-Mail:</strong> <a href="mailto:${job.contactEmail}">${job.contactEmail}</a></p>` : ''}
+            `;
+
+            // Website generieren
+            const websiteHtml = job.companyWebsite
+                ? `<p><strong>Website:</strong> <a href="${job.companyWebsite}" target="_blank" rel="noopener noreferrer">${job.companyWebsite}</a></p>`
+                : '';
+
+            // Metadaten
+            const metadataHtml = job.creationDate ? `
+                <hr>
+                <div class="small text-muted">
+                    <p><strong>Erstellt am:</strong> ${new Date(job.creationDate).toLocaleDateString('de-DE')}</p>
+                    ${job.changeDate ? `<p><strong>Geändert am:</strong> ${new Date(job.changeDate).toLocaleDateString('de-DE')} von ${job.changeUserName || 'unbekannt'}</p>` : ''}
+                </div>
+            ` : '';
+
+            return `
+                <div class="text-center">
+                    ${logoHtml}
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Standort:</strong> ${job.jobLocation}</p>
+                        <p><strong>Startdatum:</strong> ${new Date(job.startDate).toLocaleDateString('de-DE')}</p>
+                        <p><strong>Gehalt:</strong> ${salary}</p>
+                        ${websiteHtml}
+                    </div>
+                    <div class="col-md-6">
+                        ${contactHtml}
+                    </div>
+                </div>
+                <hr>
+                <div>
+                    <h5>Beschreibung</h5>
+                    <div class="job-description">${job.jobDescription || 'Keine Beschreibung verfügbar'}</div>
+                </div>
+                ${metadataHtml}
+            `;
+        }
+
+        /**
+         * Konvertiert ArrayBuffer in Base64-String
+         * param {ArrayBuffer} buffer - Der zu konvertierende ArrayBuffer
+         * returns {string} Base64-String
+         */
+        function arrayBufferToBase64(buffer) {
+            if (!buffer) return '';
+
+            try {
+                return btoa(
+                    new Uint8Array(buffer)
+                        .reduce((data, byte) => data + String.fromCharCode(byte), '')
+                );
+            } catch (e) {
+                console.error('Fehler bei Base64-Konvertierung:', e);
+                return '';
+            }
+        }
+
+        /**
+         * Zeigt Jobdetails im Modal an
+         * param {number} id - Job-ID
+         * param {string} title - Jobtitel für die Anzeige im Modal
+         */
+        async function showJobDetails(id, title) {
+            try {
+                // Job-Details laden
+                const job = await fetchJobDetails(id);
+
+                // Modal mit Details anzeigen
+                Swal.fire({
+                    title: `${title} bei ${job.companyName}`,
+                    html: generateJobDetailHTML(job),
+                    width: '80%',
+                    showCloseButton: true,
+                    showCancelButton: false,
+                    confirmButtonText: 'Schließen',
+                    customClass: {
+                        container: 'swal-job-details-container',
+                        popup: 'swal-job-details-popup',
+                        content: 'swal-job-details-content'
+                    }
+                });
+            } catch (error) {
+                console.error('Fehler beim Anzeigen der Jobdetails:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Fehler',
+                    text: 'Die Jobdetails konnten nicht geladen werden.'
+                });
+            }
+        }
+
+        /**
+         * Zeigt einen Bestätigungsdialog vor dem Löschen eines Jobs
+         * param {number} id - Job-ID
+         * param {string} jobTitle - Jobtitel für die Anzeige im Dialog
+         */
+            function confirmDelete(id, jobTitle) {
+            Swal.fire({
+                title: "Job löschen?",
+                text: `Möchtest du den Job "${jobTitle}" wirklich löschen?`,
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#dc3545",
+                cancelButtonColor: "#6c757d",
+                confirmButtonText: '<i class="fas fa-trash me-1"></i> Löschen',
+                cancelButtonText: '<i class="fas fa-times me-1"></i> Abbrechen',
+                customClass: {
+                    confirmButton: 'btn btn-danger',
+                    cancelButton: 'btn btn-secondary'
+                },
+                buttonsStyling: false
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById(`deleteForm-${id}`).submit();
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Gelöscht!',
+                        text: 'Der Job wurde erfolgreich gelöscht.',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                }
+            });
+        }
+
     </script>
 }
-@* #endregion JAVASCRIPT *@
+<style>
 
+    /* CSS-Styles für JobPosting/Index.cshtml */
 
+    /* Verbesserter Schatten für Karten und Container */
+    .card, .shadow {
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important;
+    }
+
+    /* Verbesserte Hover-Effekte für Tabellenzeilen */
+    .table-hover tbody tr:hover {
+        background-color: rgba(0, 123, 255, 0.075);
+        cursor: pointer;
+    }
+
+    /* Bessere Größenanpassung für Firmenlogos */
+    .img-fluid {
+        transition: transform 0.2s;
+    }
+
+        .img-fluid:hover {
+            transform: scale(1.1);
+        }
+
+    /* Button-Styling für bessere Erkennbarkeit */
+    .btn-group > .btn {
+        margin-right: 2px;
+    }
+
+    /* Verbesserte TabPane-Darstellung */
+    .tab-pane {
+        padding: 1rem;
+    }
+
+    /* Responsive Anpassungen für mobile Geräte */
+    @@ media (max-width: 768px) {
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .btn-group > .btn {
+            margin: 2px;
+            flex: 1 0 auto;
+        }
+    }
+
+    /* SweetAlert2 Anpassungen für Jobdetails */
+    .swal-job-details-popup {
+        font-size: 0.9rem;
+    }
+
+    .swal-job-details-content .job-description {
+        max-height: 300px;
+        overflow-y: auto;
+        padding: 10px;
+        background-color: #f8f9fa;
+        border-radius: 4px;
+        margin-top: 10px;
+    }
+</style>
+<!-- CSS für die Button-Styling -->
+<style>
+    /* Icon-Button-Styling */
+    .action-btn {
+        width: 38px;
+        height: 38px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        margin: 0 2px;
+        transition: all 0.2s ease;
+        border: none;
+    }
+
+        .action-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .action-btn i {
+            font-size: 1rem;
+        }
+
+    /* Spezifische Button-Farben */
+    .btn-view {
+        background-color: #f8f9fa;
+        color: #0d6efd;
+        border: 1px solid #dee2e6;
+    }
+
+        .btn-view:hover {
+            background-color: #e2e6ea;
+        }
+
+    .btn-edit {
+        background-color: #28a745;
+        color: white;
+    }
+
+    .btn-share {
+        background-color: #17a2b8;
+        color: white;
+    }
+
+    .btn-delete {
+        background-color: #dc3545;
+        color: white;
+    }
+
+    /* Container für die Action-Buttons */
+    .action-buttons {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-wrap: nowrap;
+    }
+
+    /* Optional: Tooltip-Styling */
+    .action-tooltip {
+        position: relative;
+    }
+
+        .action-tooltip:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0,0,0,0.8);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            white-space: nowrap;
+            z-index: 100;
+            margin-bottom: 5px;
+        }
+</style>

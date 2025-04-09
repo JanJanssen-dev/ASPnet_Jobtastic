@@ -1,4 +1,8 @@
 html {
+    scrollbar-gutter: stable; /* Reserviert Platz für Scrollbar */
+}
+
+html {
   font-size: 14px;
 }
 

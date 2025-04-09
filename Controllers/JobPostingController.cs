@@ -362,6 +362,45 @@ namespace ASPnet_Jobtastic.Controllers
                 }
             }
         }
+        //Übergabe der Jobs als Json
+        //[HttpGet]
+        //public async Task<IActionResult> GetJobDetails(int id)
+        //{
+        //    var job = await _context.JobPostings.FindAsync(id);
+        //    if (job == null)
+        //    {
+        //        return NotFound();
+        //    }
+
+        //    return Json(job);
+        //}
+        [HttpGet]
+        public IActionResult GetJobDetails(int id)
+        {
+            var job = _context.JobPostings
+                .Select(j => new
+                {
+                    j.Id,
+                    j.JobTitle,
+                    j.JobDescription,
+                    j.CompanyName,
+                    j.JobLocation,
+                    j.StartDate,
+                    j.Salary,
+                    j.CompanyImage,
+                    j.ContactName,
+                    j.ContactEmail,
+                    j.CompanyWebsite
+                })
+                .FirstOrDefault(j => j.Id == id);
+
+            if (job == null)
+            {
+                return NotFound();
+            }
+
+            return Json(job);
+        }
 
         // GET: Freigaben für ein JobPosting anzeigen
         public async Task<IActionResult> ManageSharing(int id)
