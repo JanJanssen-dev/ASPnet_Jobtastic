@@ -83,7 +83,7 @@
             document.addEventListener('DOMContentLoaded', function() {
                 Swal.fire({
                     title: 'Erfolg',
-                    text: '@TempData["SuccessMessage"]',
+                    text: '@Html.Raw(TempData["SuccessMessage"])',
                     icon: 'success',
                     timer: 2000,
                     showConfirmButton: false

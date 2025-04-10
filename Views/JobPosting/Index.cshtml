@@ -71,181 +71,25 @@
     <div class="tab-content p-3 bg-white border border-top-0 rounded-bottom shadow-sm mb-4" id="jobTabsContent">
         <!-- Tab: Eigene Jobs -->
         <div class="tab-pane fade show active" id="owned" role="tabpanel" aria-labelledby="owned-tab">
-            @if (ownedJobs.Any())
-            {
-                <div class="table-responsive">
-                    <table id="ownedJobsTable" class="table table-striped table-hover w-100">
-                        <thead>
-                            <tr>
-                                <th style="width: 60px">Logo</th>
-                                <th style="width: 20%">Job Titel</th>
-                                <th style="width: 15%">Firma</th>
-                                <th style="width: 15%">Kontakt</th>
-                                <th style="width: 10%">Start am</th>
-                                <th style="width: 15%">Erstellt am</th>
-                                <th style="width: 15%">Aktionen</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var job in ownedJobs)
-                            {
-                                <tr>
-                                    <!-- Logo -->
-                                    <td>
-                                        @if (job.CompanyImage != null && job.CompanyImage.Length > 0)
-                                        {
-                                            var base64 = Convert.ToBase64String(job.CompanyImage);
-                                            <img src="data:image/png;base64,@base64" alt="@job.CompanyName Logo" class="img-fluid" style="max-width: 60px; max-height: 40px;">
-                                        }
-                                    </td>
-                                    <td>@job.JobTitle</td>
-                                    <td>@job.CompanyName</td>
-                                    <td>@job.ContactName</td>
-                                    <td data-order="@job.StartDate.ToString("yyyy-MM-dd")">@job.StartDate.ToShortDateString()</td>
-                                    <td data-order="@(job.CreationDate?.ToString("yyyy-MM-dd") ?? "")">
-                                        @if (job.CreationDate.HasValue)
-                                        {
-                                            @job.CreationDate.Value.ToShortDateString()
-                                        }
-                                    </td>
-                                    <!-- Aktions-Buttons -->
-                                    <td>
-                                        <div class="action-buttons">
-                                            <!-- Details anzeigen -->
-                                            <button type="button" class="action-btn btn-view action-tooltip" data-tooltip="Details anzeigen"
-                                                    onclick="showJobDetails(@job.Id, '@job.JobTitle.Replace("'", "\\")')">
-                                                <i class="fas fa-eye"></i>
-                                            </button>
-
-                                            <!-- Bearbeiten -->
-                                            <a href="@Url.Action("EditJob", new { id = job.Id })" class="action-btn btn-edit action-tooltip" data-tooltip="Bearbeiten">
-                                                <i class="fas fa-edit"></i>
-                                            </a>
-
-                                            <!-- Freigeben -->
-                                            <a href="@Url.Action("ManageSharing", new { id = job.Id })" class="action-btn btn-share action-tooltip" data-tooltip="Freigeben">
-                                                <i class="fas fa-share-alt"></i>
-                                            </a>
-
-                                            <!-- Löschen -->
-                                            <button type="button" class="action-btn btn-delete action-tooltip" data-tooltip="Löschen"
-                                                    onclick="confirmDelete(@job.Id, '@job.JobTitle.Replace("'", "\\")')">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-            }
-            else
-            {
-                <!-- Infobox wenn keine eigenen Jobs vorhanden -->
-                <div class="alert alert-info" role="alert">
-                    <p>Du hast noch keine eigenen Jobangebote erstellt.</p>
-                    <a asp-controller="JobPosting" asp-action="CreateJob" class="btn btn-primary mt-2">
-                        <i class="fas fa-plus-circle me-2"></i>Erstelle jetzt dein erstes Jobangebot
-                    </a>
-                </div>
-            }
+            @await Html.PartialAsync("_JobTable", new JobTableViewModel
+       {
+           Jobs = ownedJobs,
+           TableId = "ownedJobsTable",
+           EmptyMessage = "Du hast noch keine eigenen Jobangebote erstellt.",
+           ShowCreateButton = true
+       })
         </div>
 
         <!-- Tab: Freigegebene Jobs -->
         <div class="tab-pane fade" id="shared" role="tabpanel" aria-labelledby="shared-tab">
-            @if (sharedJobs.Any())
-            {
-                <div class="table-responsive">
-                    <table id="sharedJobsTable" class="table table-striped table-hover w-100">
-                        <thead>
-                            <tr>
-                                <th style="width: 60px">Logo</th>
-                                <th style="width: 20%">Job Titel</th>
-                                <th style="width: 10%">Firma</th>
-                                <th style="width: 10%">Kontakt</th>
-                                <th style="width: 10%">Start am</th>
-                                <th style="width: 10%">Freigegeben von</th>
-                                <th style="width: 15%">Rechte</th>
-                                <th style="width: 15%">Aktionen</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var job in sharedJobs)
-                            {
-                                <tr>
-                                    <!-- Logo -->
-                                    <td>
-                                        @if (job.CompanyImage != null && job.CompanyImage.Length > 0)
-                                        {
-                                            var base64 = Convert.ToBase64String(job.CompanyImage);
-                                            <img src="data:image/png;base64,@base64" alt="@job.CompanyName Logo" class="img-fluid" style="max-width: 60px; max-height: 40px;">
-                                        }
-                                    </td>
-                                    <td>@job.JobTitle</td>
-                                    <td>@job.CompanyName</td>
-                                    <td>@job.ContactName</td>
-                                    <td data-order="@job.StartDate.ToString("yyyy-MM-dd")">@job.StartDate.ToShortDateString()</td>
-                                    <td>@job.OwnerUsername</td>
-                                    <td>
-                                        @if (job.CanEdit && job.CanDelete)
-                                        {
-                                            <span class="badge bg-success">Vollzugriff</span>
-                                        }
-                                        else if (job.CanEdit)
-                                        {
-                                            <span class="badge bg-primary">Bearbeiten</span>
-                                        }
-                                        else if (job.CanDelete)
-                                        {
-                                            <span class="badge bg-danger">Löschen</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="badge bg-secondary">Nur Lesen</span>
-                                        }
-                                    </td>
-                                    <!-- Aktions-Buttons -->
-                                    <td>
-                                        <div class="action-buttons">
-                                            <!-- Details anzeigen -->
-                                            <button type="button" class="action-btn btn-view action-tooltip" data-tooltip="Details anzeigen"
-                                                    onclick="showJobDetails(@job.Id, '@job.JobTitle.Replace("'", "\\")')">
-                                                <i class="fas fa-eye"></i>
-                                            </button>
-
-                                            <!-- Bearbeiten - nur wenn Berechtigung vorhanden -->
-                                            @if (job.CanEdit)
-                                            {
-                                                <a href="@Url.Action("EditJob", new { id = job.Id })" class="action-btn btn-edit action-tooltip" data-tooltip="Bearbeiten">
-                                                    <i class="fas fa-edit"></i>
-                                                </a>
-                                            }
-
-                                            <!-- Löschen - nur wenn Berechtigung vorhanden -->
-                                            @if (job.CanDelete)
-                                            {
-                                                <button type="button" class="action-btn btn-delete action-tooltip" data-tooltip="Löschen"
-                                                        onclick="confirmDelete(@job.Id, '@job.JobTitle.Replace("'", "\\")')">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            }
-                                        </div>
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-            }
-            else
-            {
-                <!-- Infobox wenn keine freigegebenen Jobs vorhanden -->
-                <div class="alert alert-info" role="alert">
-                    <p>Es wurden keine Jobs für dich freigegeben.</p>
-                </div>
-            }
+            @await Html.PartialAsync("_JobTable", new JobTableViewModel
+       {
+           Jobs = sharedJobs,
+           TableId = "sharedJobsTable",
+           EmptyMessage = "Es wurden keine Jobs für dich freigegeben."
+       })
         </div>
+
         <!-- Tab: Admin-Jobs (nur wenn Admin und showAllJobs) -->
         @if (isAdmin && showAllJobs)
         {
@@ -256,81 +100,12 @@
                     Du siehst diese Jobs als Administrator. Bearbeite sie mit Vorsicht!
                 </div>
 
-                @if (adminJobs.Any())
-                {
-                    <div class="table-responsive">
-                        <table id="adminJobsTable" class="table table-striped table-hover w-100">
-                            <thead>
-                                <tr>
-                                    <th style="width: 60px">Logo</th>
-                                    <th style="width: 20%">Job Titel</th>
-                                    <th style="width: 10%">Firma</th>
-                                    <th style="width: 10%">Kontakt</th>
-                                    <th style="width: 10%">Start am</th>
-                                    <th style="width: 15%">Erstellt am</th>
-                                    <th style="width: 10%">Besitzer</th>
-                                    <th style="width: 15%">Aktionen</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var job in adminJobs)
-                                {
-                                    <tr>
-                                        <!-- Logo -->
-                                        <td>
-                                            @if (job.CompanyImage != null && job.CompanyImage.Length > 0)
-                                            {
-                                                var base64 = Convert.ToBase64String(job.CompanyImage);
-                                                <img src="data:image/png;base64,@base64" alt="@job.CompanyName Logo" class="img-fluid" style="max-width: 60px; max-height: 40px;">
-                                            }
-                                        </td>
-                                        <td>@job.JobTitle</td>
-                                        <td>@job.CompanyName</td>
-                                        <td>@job.ContactName</td>
-                                        <td data-order="@job.StartDate.ToString("yyyy-MM-dd")">@job.StartDate.ToShortDateString()</td>
-                                        <td data-order="@(job.CreationDate?.ToString("yyyy-MM-dd") ?? "")">
-                                            @if (job.CreationDate.HasValue)
-                                            {
-                                                @job.CreationDate.Value.ToShortDateString()
-                                            }
-                                        </td>
-                                        <td>
-                                            <span class="badge bg-info">@job.OwnerUsername</span>
-                                        </td>
-                                        <!-- Aktions-Buttons -->
-                                        <td>
-                                            <div class="action-buttons">
-                                                <!-- Details anzeigen -->
-                                                <button type="button" class="action-btn btn-view action-tooltip" data-tooltip="Details anzeigen"
-                                                        onclick="showJobDetails(@job.Id, '@job.JobTitle.Replace("'", "\\")')">
-                                                    <i class="fas fa-eye"></i>
-                                                </button>
-
-                                                <!-- Bearbeiten -->
-                                                <a href="@Url.Action("EditJob", new { id = job.Id })" class="action-btn btn-edit action-tooltip" data-tooltip="Bearbeiten">
-                                                    <i class="fas fa-edit"></i>
-                                                </a>
-
-                                                <!-- Löschen -->
-                                                <button type="button" class="action-btn btn-delete action-tooltip" data-tooltip="Löschen"
-                                                        onclick="confirmDelete(@job.Id, '@job.JobTitle.Replace("'", "\\")')">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                }
-                else
-                {
-                    <!-- Infobox wenn keine Admin-Jobs vorhanden -->
-                    <div class="alert alert-info" role="alert">
-                        <p>Es gibt keine weiteren Jobs im System.</p>
-                    </div>
-                }
+                @await Html.PartialAsync("_JobTable", new JobTableViewModel
+       {
+           Jobs = adminJobs,
+           TableId = "adminJobsTable",
+           EmptyMessage = "Es gibt keine weiteren Jobs im System."
+       })
             </div>
         }
     </div>
@@ -366,35 +141,15 @@
                 responsive: true,
                 pageLength: 10,
                 lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "Alle"]],
-                // Feste Spaltenbreiten bestimmt durch die style-Attribute in der Tabelle
                 autoWidth: false,
                 deferRender: true,
                 processing: true
             };
 
-            // Eigene Jobs Tabelle
-            if ($("#ownedJobsTable").length && $("#ownedJobsTable tbody tr").length > 0) {
-                $("#ownedJobsTable").DataTable({
-                    ...commonConfig,
-                    order: [[5, 'desc']] // Nach Erstellungsdatum sortieren
-                });
-            }
-
-            // Freigegebene Jobs Tabelle
-            if ($("#sharedJobsTable").length && $("#sharedJobsTable tbody tr").length > 0) {
-                $("#sharedJobsTable").DataTable({
-                    ...commonConfig,
-                    order: [[4, 'asc']] // Nach Startdatum sortieren
-                });
-            }
-
-            // Admin Jobs Tabelle
-            if ($("#adminJobsTable").length && $("#adminJobsTable tbody tr").length > 0) {
-                $("#adminJobsTable").DataTable({
-                    ...commonConfig,
-                    order: [[5, 'desc']] // Nach Erstellungsdatum sortieren
-                });
-            }
+            // Tabellen initialisieren, falls vorhanden
+            initializeTable("ownedJobsTable", { ...commonConfig, order: [[5, 'desc']] });
+            initializeTable("sharedJobsTable", { ...commonConfig, order: [[4, 'asc']] });
+            initializeTable("adminJobsTable", { ...commonConfig, order: [[5, 'desc']] });
 
             // Event-Handler für Admin-Ansicht Checkbox
             const showAllJobsCheckbox = document.getElementById('showAllJobs');
@@ -417,6 +172,18 @@
                 };
             }
         });
+
+        /**
+         * Initialisiert eine DataTable, wenn sie existiert und Daten enthält
+         * param {string} tableId - ID der Tabelle
+         * param {object} config - DataTable-Konfiguration
+         */
+        function initializeTable(tableId, config) {
+            const $table = $(`#${tableId}`);
+            if ($table.length && $table.find('tbody tr').length > 0) {
+                $table.DataTable(config);
+            }
+        }
 
         /**
          * Holt Jobdetails vom Server
@@ -466,10 +233,10 @@
          * returns {string} Generiertes HTML
          */
         function generateJobDetailHTML(job) {
-        // Logo generieren
-                    const logoHtml = job.companyImageBase64
-                        ? `<img src="data:image/png;base64,${job.companyImageBase64}" alt="${job.companyName} Logo" class="img-fluid mb-3" style="max-height: 100px; max-width: 200px; object-fit: contain;">`
-                        : 'Fehler!';
+            // Logo generieren
+            const logoHtml = job.companyImageBase64
+                ? `<img src="data:image/png;base64,${job.companyImageBase64}" alt="${job.companyName} Logo" class="img-fluid mb-3" style="max-height: 100px; max-width: 200px; object-fit: contain;">`
+                : '';
 
             // Gehalt formatieren
             const salary = job.salary > 0
@@ -524,25 +291,6 @@
                 </div>
                 ${metadataHtml}
             `;
-        }
-
-        /**
-         * Konvertiert ArrayBuffer in Base64-String
-         * param {ArrayBuffer} buffer - Der zu konvertierende ArrayBuffer
-         * returns {string} Base64-String
-         */
-        function arrayBufferToBase64(buffer) {
-            if (!buffer) return '';
-
-            try {
-                return btoa(
-                    new Uint8Array(buffer)
-                        .reduce((data, byte) => data + String.fromCharCode(byte), '')
-                );
-            } catch (e) {
-                console.error('Fehler bei Base64-Konvertierung:', e);
-                return '';
-            }
         }
 
         /**
@@ -748,17 +496,20 @@
 
     /* Responsive Anpassungen für mobile Geräte */
     @@ media (max-width: 768px) {
-        .action-buttons {
-            justify-content: space-around;
+        .action-buttons
+
+    {
+        justify-content: space-around;
+    }
+
+    .action-btn {
+        width: 32px;
+        height: 32px;
+    }
+
+        .action-btn i {
+            font-size: 0.875rem;
         }
 
-        .action-btn {
-            width: 32px;
-            height: 32px;
-        }
-
-            .action-btn i {
-                font-size: 0.875rem;
-            }
     }
 </style>

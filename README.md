@@ -212,7 +212,7 @@ using (var scope = app.Services.CreateScope())
 Das System wurde mit Erweiterbarkeit im Fokus entwickelt:
 - **JobPostingOperations** kann um neue Operationen erweitert werden
 - **Autorisierungssystem** kann für weitere Entitäten adaptiert werden
-- **Benutzerrollen** können nach Bedarf hinzugefügt werden
+- **Benutzerrollen** können nach Bedarf hinzugefuegt werden
 
 Um neue Operationen hinzuzufügen:
 1. Ergänzen Sie `JobPostingOperations.cs` um neue Operationstypen

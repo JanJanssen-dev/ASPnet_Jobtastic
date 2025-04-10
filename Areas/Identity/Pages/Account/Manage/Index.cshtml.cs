@@ -52,7 +52,7 @@ namespace ASPnet_Jobtastic.Areas.Identity.Pages.Account.Manage
         public class InputModel
         {
             /// <summary>
-            ///     Neues Feld für Benutzernamen hinzugefügt
+            ///     Neues Feld für Benutzernamen hinzugefuegt
             /// </summary>
             [Required(ErrorMessage = "Benutzername ist erforderlich")]
             [Display(Name = "Benutzername")]

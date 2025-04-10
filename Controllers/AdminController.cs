@@ -33,8 +33,8 @@ namespace ASPnet_Jobtastic.Controllers
                     var result = await _userManager.AddToRoleAsync(user, role);
                     if (result.Succeeded)
                     {
-                        _logger.LogInformation("Rolle {Role} für Benutzer {UserId} hinzugefügt", role, userId);
-                        TempData["SuccessMessage"] = $"Rolle '{role}' wurde erfolgreich hinzugefügt.";
+                        _logger.LogInformation("Rolle {Role} für Benutzer {UserId} hinzugefuegt", role, userId);
+                        TempData["SuccessMessage"] = $"Rolle {role} wurde erfolgreich hinzugefügt.";
                     }
                     else
                     {
@@ -70,7 +70,9 @@ namespace ASPnet_Jobtastic.Controllers
                     if (result.Succeeded)
                     {
                         _logger.LogInformation("Rolle {Role} für Benutzer {UserId} entfernt", role, userId);
-                        TempData["SuccessMessage"] = $"Rolle '{role}' wurde erfolgreich entfernt.";
+                        TempData["SuccessMessage"] = $"Rolle {role} wurde erfolgreich entfernt.";
+
+
                     }
                     else
                     {
