@@ -5,8 +5,26 @@
     ViewData["ActivePage"] = "AdminPanel";
 }
 
-@* <div id="adminContent" class="card"> *@
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle me-2"></i> @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
 
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-circle me-2"></i> @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div id="adminContent" class="card shadow-sm mb-4">
+    <div class="card-header bg-light">
+        <h5 class="mb-0">Administratorfunktionen</h5>
+    </div>
     <div class="card-body">
         <div class="text-center" id="loadingSpinner">
             <div class="spinner-border text-primary" role="status">
@@ -16,7 +34,7 @@
         </div>
         <div id="adminPanelContent"></div>
     </div>
-@* </div> *@
+</div>
 
 @section Scripts {
     <script>
@@ -42,7 +60,7 @@
                                 columnDefs: [
                                     { targets: 0, orderable: true }, // E-Mail
                                     { targets: 1, orderable: false }, // Rollen
-                                    { targets: 2, orderable: false, width: "40%" } // Aktionen-Spalte
+                                    { targets: 2, orderable: false, width: "150px" } // Aktionen-Spalte
                                 ]
                             });
                         }
