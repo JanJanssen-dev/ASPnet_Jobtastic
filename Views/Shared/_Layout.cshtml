@@ -13,9 +13,17 @@
 
 
 </head>
+
+
+
+
 <body>
+
+    <div class="fluid-background">
+        <canvas id="fluidCanvas"></canvas>
+    </div>
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-transparent border-bottom box-shadow mb-3">
             <div class="container-fluid">
                 @* <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">Jobtastic</a> *@
                 <button class="rounded-2 bg-transparent" style="border-color:transparent" 
@@ -49,7 +57,7 @@
         </main>
     </div>
 
-    <footer class="border-top footer text-muted">
+    <footer class="footer text-muted bg-transparent">
         <div class="container">
             &copy; 2025 - Jobtastic - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
         </div>
@@ -110,5 +118,43 @@
         </script>
     }
     @await RenderSectionAsync("Scripts", required: false)
+
+    <script type="text/javascript">
+    function loadFluidScript() {
+    // Check if the screen width is greater than 960px
+    if (screen.width > 960) {
+    // Dynamically add the fluid animation script to the
+    
+        const head = document.getElementsByTagName('head')[0];
+        const script = document.createElement('script');
+        script.type = 'text/javascript';
+        script.src = '/js/script.js';
+        head.appendChild(script);
+        console.log("Running fluid animation script");
+
+        // Adjust the canvas size after the script is loaded
+        setTimeout(() => {
+        const canvas = document.getElementById("fluidCanvas");
+        if (canvas) {
+        // Override the inline attributes for width and height
+        canvas.removeAttribute("width");
+        canvas.removeAttribute("height");
+
+        // Apply custom width and height via JavaScript
+        canvas.width = window.innerWidth; // Set the canvas width to the window width
+        canvas.height = window.innerHeight; // Set the canvas height to the window height
+        canvas.style.width = "100%"; // Ensure canvas takes full width of its container
+        canvas.style.height = "auto"; // Maintain aspect ratio to prevent vertical overflow
+        console.log("Canvas dimensions successfully adjusted");
+        }
+        }, 1000); // Wait 1 second to ensure the fluid script is fully loaded before adjustments
+        }
+        }
+
+        // Load the function when the DOM is fully loaded
+        document.addEventListener('DOMContentLoaded', loadFluidScript);
+
+    </script>
+
 </body>
 </html>
