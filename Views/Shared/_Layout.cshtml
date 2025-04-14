@@ -1,5 +1,4 @@
-﻿﻿
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -14,61 +13,52 @@
 
 </head>
 
-
-
-
 <body>
-
     <div class="fluid-background">
         <canvas id="fluidCanvas"></canvas>
     </div>
+
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-transparent border-bottom box-shadow mb-3">
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light mb-3">
             <div class="container-fluid">
-                @* <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">Jobtastic</a> *@
-                <button class="rounded-2 bg-transparent" style="border-color:transparent" 
-                onclick="window.location.href='@Url.Action("Index", "Home", new { area = "" })'" 
-                asp-area="" asp-controller="Home" asp-action="Index">
-               
-                    <img src="~/images/JobtasticBannerNEW.png" alt="Jobtastic Logo"
-                         class="me-2" style="max-height: 35px; max-width: auto;" />
+                <!-- Logo in Button einbetten -->
+                <button class="logo-btn" onclick="window.location.href='@Url.Action("Index", "Home", new { area = "" })'">
+                    <img src="~/images/JobtasticBannerNEW.png" alt="Jobtastic Logo" class="me-2" style="max-height: 35px; max-width: auto;" />
                 </button>
+
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
+
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                     <ul class="navbar-nav flex-grow-1">
-                        @* <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li> *@
+                        <!-- Deine Navbar-Links hier -->
                     </ul>
                     <partial name="_LoginPartial" />
                 </div>
             </div>
         </nav>
     </header>
+
     <div class="container">
         <main role="main" class="pb-3">
             @RenderBody()
         </main>
     </div>
 
-    <footer class="footer text-muted bg-transparent">
-        <div class="container">
+    <footer class="footer text-muted w-100">
+        <div class="container-fluid footer-container">
             &copy; 2025 - Jobtastic - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
         </div>
     </footer>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
-
 
     @if (TempData["ErrorMessage"] != null)
     {
@@ -117,44 +107,44 @@
             });
         </script>
     }
+
     @await RenderSectionAsync("Scripts", required: false)
 
+    <!-- Behalte das dynamische Script-Laden bei -->
     <script type="text/javascript">
-    function loadFluidScript() {
-    // Check if the screen width is greater than 960px
-    if (screen.width > 960) {
-    // Dynamically add the fluid animation script to the
-    
-        const head = document.getElementsByTagName('head')[0];
-        const script = document.createElement('script');
-        script.type = 'text/javascript';
-        script.src = '/js/script.js';
-        head.appendChild(script);
-        console.log("Running fluid animation script");
+        function loadFluidScript() {
+            // Check if the screen width is greater than 960px
+            if (screen.width > 960) {
+                // Dynamically add the fluid animation script to the
 
-        // Adjust the canvas size after the script is loaded
-        setTimeout(() => {
-        const canvas = document.getElementById("fluidCanvas");
-        if (canvas) {
-        // Override the inline attributes for width and height
-        canvas.removeAttribute("width");
-        canvas.removeAttribute("height");
+                const head = document.getElementsByTagName('head')[0];
+                const script = document.createElement('script');
+                script.type = 'text/javascript';
+                script.src = '/js/script.js';
+                head.appendChild(script);
+                console.log("Running fluid animation script");
 
-        // Apply custom width and height via JavaScript
-        canvas.width = window.innerWidth; // Set the canvas width to the window width
-        canvas.height = window.innerHeight; // Set the canvas height to the window height
-        canvas.style.width = "100%"; // Ensure canvas takes full width of its container
-        canvas.style.height = "auto"; // Maintain aspect ratio to prevent vertical overflow
-        console.log("Canvas dimensions successfully adjusted");
-        }
-        }, 1000); // Wait 1 second to ensure the fluid script is fully loaded before adjustments
-        }
+                // Adjust the canvas size after the script is loaded
+                setTimeout(() => {
+                    const canvas = document.getElementById("fluidCanvas");
+                    if (canvas) {
+                        // Override the inline attributes for width and height
+                        canvas.removeAttribute("width");
+                        canvas.removeAttribute("height");
+
+                        // Apply custom width and height via JavaScript
+                        canvas.width = window.innerWidth; // Set the canvas width to the window width
+                        canvas.height = window.innerHeight; // Set the canvas height to the window height
+                        canvas.style.width = "100%"; // Ensure canvas takes full width of its container
+                        canvas.style.height = "auto"; // Maintain aspect ratio to prevent vertical overflow
+                        console.log("Canvas dimensions successfully adjusted");
+                    }
+                }, 1000); // Wait 1 second to ensure the fluid script is fully loaded before adjustments
+            }
         }
 
         // Load the function when the DOM is fully loaded
         document.addEventListener('DOMContentLoaded', loadFluidScript);
-
     </script>
-
 </body>
 </html>
