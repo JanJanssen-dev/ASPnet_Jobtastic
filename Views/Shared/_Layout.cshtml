@@ -19,22 +19,20 @@
     </div>
 
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light mb-3">
-            <div class="container-fluid">
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light mb-0">
+            <div class="container-fluid ">
                 <!-- Logo in Button einbetten -->
                 <button class="logo-btn" onclick="window.location.href='@Url.Action("Index", "Home", new { area = "" })'">
-                    <img src="~/images/JobtasticBannerNEW.png" alt="Jobtastic Logo" class="me-2" style="max-height: 35px; max-width: auto;" />
+                    <img src="~/images/JobtasticBannerNEW.png" alt="Jobtastic Logo" style="max-height: 45px; max-width: 100%; object-fit: contain;" />
                 </button>
-
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <!-- Deine Navbar-Links hier -->
-                    </ul>
+                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-end mb-3">
+                    @* <ul class="navbar-nav">
+                        <!-- Navbar-Links hier -->
+                    </ul> *@
                     <partial name="_LoginPartial" />
                 </div>
             </div>
