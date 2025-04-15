@@ -1,39 +1,45 @@
+/* ===== GRUNDLEGENDE EINSTELLUNGEN ===== */
+/* Basis HTML-Einstellungen */
 html {
-    scrollbar-gutter: stable; /* Reserviert Platz für Scrollbar */
+    /* Scrollbar-Einstellungen für konsistentes Layout */
+    scrollbar-gutter: stable;
+    /* Basis-Schriftgröße */
+    font-size: 14px;
+    /* Grundposition und Mindesthöhe */
+    position: relative;
+    min-height: 100%;
 }
 
-html {
-  font-size: 14px;
-}
-
+/* Größere Schrift auf größeren Bildschirmen */
 @media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
+    html {
+        font-size: 16px;
+    }
 }
 
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
-}
-
-html {
-  position: relative;
-  min-height: 100%;
-}
-
+/* Grundlegende Body-Einstellungen */
 body {
-  margin-bottom: 60px;
+    margin-bottom: 60px; /* Platz für Footer */
 }
 
+/* Fokus-Styling für interaktive Elemente */
+.btn:focus,
+.btn:active:focus,
+.btn-link.nav-link:focus,
+.form-control:focus,
+.form-check-input:focus {
+    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
 
-/* Minimale Änderungen für Transparenz */
+/* ===== HINTERGRUND-FLUID-ANIMATION ===== */
+/* Container für Fluid-Animation */
 .fluid-background {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    z-index: -1;
+    z-index: -1; /* Hinter allem anderen */
 }
 
 #fluidCanvas {
@@ -41,20 +47,60 @@ body {
     height: 100%;
 }
 
-/* Transparent-Einstellungen für Header und Footer */
-header {
-    background-color: transparent !important;
-}
-
+/* ===== HEADER UND NAVIGATION ===== */
+/* Transparente Header-Einstellungen */
+header,
 .navbar {
     background-color: transparent !important;
 }
 
-/* Logo-Button Styling */
+/* Menü-Styling - linkes Menü */
+.left-menu {
+    background-color: rgba(255, 255, 255, 0.8);
+    border-radius: 5px;
+    padding: 7px 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    margin-right: 15px;
+}
+
+    .left-menu .nav-item {
+        margin: 0 2px;
+        display: flex;
+        align-items: center;
+    }
+
+/* Menü-Styling - rechtes Menü */
+.navbar-nav {
+    background-color: rgba(255, 255, 255, 0.8);
+    border-radius: 5px;
+    padding: 7px 5px 5px 5px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+    .navbar-nav .nav-item {
+        margin: 0 1px;
+    }
+
+        /* Navigation Links */
+        .navbar-nav .nav-item .nav-link,
+        .navbar-nav .nav-item form button {
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 0.5rem 0.8rem;
+            border-radius: 8px;
+            margin: 0 3px;
+        }
+
+/* ===== LOGO-STYLING ===== */
 .logo-btn {
     background-color: transparent;
     border: none;
     padding: 0;
+    margin: 0;
+    cursor: pointer;
+    width: auto;
+    min-width: 1px;
 }
 
     .logo-btn img {
@@ -63,16 +109,14 @@ header {
         border-radius: 8px;
     }
 
-/* Navbar-Links sichtbar machen */
-.navbar-nav .nav-item .nav-link,
-.navbar-nav .nav-item form button {
-    background-color: rgba(255, 255, 255, 0.8);
-    padding: 0.5rem 0.8rem;
-    border-radius: 8px;
+/* Logo im linken Menü spezifisch */
+.left-menu .logo-btn {
+    padding: 0;
     margin: 0 3px;
+    background-color: transparent;
 }
 
-/* Transparenter Footer */
+/* ===== FOOTER-STYLING ===== */
 .footer {
     background-color: transparent !important;
     width: 100%;
@@ -87,69 +131,24 @@ header {
         border-top: 1px solid rgba(0,0,0,.125);
     }
 
-
-/* Für das Menü rechts */
-.navbar-nav {
-    background-color: rgba(255, 255, 255, 0.8);
-    border-radius: 5px;
-    padding: 7px 5px 5px 5px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
-
-    .navbar-nav .nav-item {
-        margin: 0 1px;
-    }
-
-/*    .navbar-nav .nav-link {
-        color: #333 !important;
-        font-weight: 500;
-        transition: all 0.3s ease;
-    }*/
-
-        /*.navbar-nav .nav-link:hover {
-            color: #0195ED !important;
-            transform: translateY(-2px);
-        }*/
-
-/* Für das Logo links */
-.logo-btn {
-    background: transparent;
-    border: none;
-    padding: 0;
-    margin: 0;
-    cursor: pointer;
-    width: auto;
-    min-width: 1px;
-    
-}
-
-
-
-
-/* ===== Allgemeine Styles ===== */
-html {
-    scrollbar-gutter: stable; /* Reserviert Platz für Scrollbar zur Vermeidung von Layout-Sprüngen */
-}
-
-/* Verbesserte Kartenansicht */
+/* ===== UI-KOMPONENTEN ===== */
+/* Karten und Schatten */
 .card, .shadow {
     box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important;
 }
 
-/* Verbesserte Hover-Effekte für Tabellenzeilen */
+/* Tabellen mit Hover-Effekt */
 .table-hover tbody tr:hover {
     background-color: rgba(0, 123, 255, 0.075);
     cursor: pointer;
 }
 
-
-
-/* Verbesserte TabPane-Darstellung */
+/* Tab-Bereiche */
 .tab-pane {
     padding: 1rem;
 }
 
-/* SweetAlert2 Anpassungen für Jobdetails */
+/* SweetAlert2 Anpassungen */
 .swal-job-details-popup {
     font-size: 0.9rem;
 }
@@ -163,11 +162,8 @@ html {
     margin-top: 10px;
 }
 
-
-
-/* ===== Aktions-Buttons Styling ===== */
-
-/* Icon-Button-Styling */
+/* ===== AKTIONS-BUTTONS ===== */
+/* Basis-Styling für runde Aktions-Buttons */
 .action-btn {
     width: 38px;
     height: 38px;
@@ -194,7 +190,7 @@ html {
         font-size: 1rem;
     }
 
-/* Spezifische Button-Farben */
+/* Spezifische Button-Varianten */
 .btn-view {
     background-color: #f8f9fa;
     color: #0d6efd;
@@ -220,7 +216,7 @@ html {
     color: white;
 }
 
-/* Container für die Action-Buttons */
+/* Container für Button-Gruppen */
 .action-buttons {
     display: flex;
     justify-content: center;
@@ -228,7 +224,7 @@ html {
     flex-wrap: nowrap;
 }
 
-/* Tooltip-Styling */
+/* Tooltip für Buttons */
 .action-tooltip {
     position: relative;
 }
@@ -249,24 +245,94 @@ html {
         margin-bottom: 5px;
     }
 
-/* Responsive Anpassungen für mobile Geräte */
-    @media (max-width: 768px) {
-    .action-buttons {
-        justify-content: space-around;
-    }
-
-    .action-btn {
-        width: 32px;
-        height: 32px;
-    }
-
-        .action-btn i {
-            font-size: 0.875rem;
-        }
+/* ===== TOGGLE-SWITCH ===== */
+/* Basis-Container für Toggle */
+.toggle-switch {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    margin: 0 8px;
 }
 
+    .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
 
-/* Styling für den Fluid-Toggle-Button */
+/* Slider-Styling */
+.toggle-slider {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 24px;
+    background-color: #e0e0e0;
+    border-radius: 34px;
+    transition: all 0.4s ease;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
+}
+
+    .toggle-slider:before {
+        position: absolute;
+        content: "";
+        height: 20px;
+        width: 20px;
+        left: 2px;
+        bottom: 2px;
+        background-color: white;
+        border-radius: 50%;
+        transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+/* Toggle-Icon */
+.toggle-icon {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.8);
+    color: rgba(1, 149, 237, 0.5);
+    font-size: 12px;
+    transition: all 0.3s ease;
+    opacity: 0;
+}
+
+/* Toggle im aktiven Zustand */
+input:checked + .toggle-slider {
+    background-color: #0195ED;
+}
+
+    input:checked + .toggle-slider:before {
+        transform: translateX(26px);
+    }
+
+    input:checked + .toggle-slider .toggle-icon {
+        color: white;
+        left: 25%;
+        opacity: 1;
+    }
+
+/* Hover-Effekte */
+.toggle-switch:hover .toggle-slider:before {
+    box-shadow: 0 0 5px rgba(1, 149, 237, 0.5);
+}
+
+.toggle-label {
+    margin-left: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #555;
+}
+
+.toggle-switch:hover .toggle-label {
+    color: #0195ED;
+}
+
+/* ===== FLUID-TOGGLE-BUTTON ===== */
 .fluid-toggle-btn {
     background-color: rgba(255, 255, 255, 0.8);
     color: #0195ED;
@@ -292,40 +358,36 @@ html {
         color: white;
     }
 
-/* Styling für das linke Menü (gleich wie rechtes Menü) */
-.left-menu {
-    background-color: rgba(255, 255, 255, 0.8);
-    border-radius: 5px;
-    padding: 7px 10px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    display: flex;
-    align-items: center;
-    margin-right: 15px;
-}
-
-    .left-menu .nav-item {
-        margin: 0 2px;
-        display: flex;
-        align-items: center;
-    }
-
-    /* Das Logo-Button speziell im linken Menü anpassen */
-    .left-menu .logo-btn {
-        padding: 0;
-        margin: 0 3px;
-        background-color: transparent;
-    }
-
-/* Responsive Anpassungen */
+/* ===== RESPONSIVE ANPASSUNGEN ===== */
 @media (max-width: 768px) {
-    .left-menu {
-        display: none; /* Auf Mobilgeräten ausblenden oder alternatives Styling */
+    /* Aktionsbuttons auf mobilen Geräten */
+    .action-buttons {
+        justify-content: space-around;
     }
 
-    /* Fluid-Toggle-Button auf Mobilgeräten besser positionieren */
+    .action-btn {
+        width: 32px;
+        height: 32px;
+    }
+
+        .action-btn i {
+            font-size: 0.875rem;
+        }
+
+    /* Linkes Menü auf Mobilgeräten ausblenden */
+    .left-menu {
+        display: none;
+    }
+
+    /* Fluid-Toggle auf Mobilgeräten anpassen */
     .fluid-toggle-btn {
         margin-right: 5px;
         width: 34px;
         height: 34px;
+    }
+
+    /* Labels auf Mobilgeräten ausblenden */
+    .toggle-label {
+        display: none;
     }
 }
