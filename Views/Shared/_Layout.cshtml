@@ -9,8 +9,6 @@
     <link rel="stylesheet" href="~/ASPnet_Jobtastic.styles.css" asp-append-version="true" />
     <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
-
-
 </head>
 
 <body>
@@ -20,19 +18,29 @@
 
     <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light mb-0">
-            <div class="container-fluid ">
-                <!-- Logo in Button einbetten -->
-                <button class="logo-btn" onclick="window.location.href='@Url.Action("Index", "Home", new { area = "" })'">
-                    <img src="~/images/JobtasticBannerNEW.png" alt="Jobtastic Logo" style="max-height: 45px; max-width: 100%; object-fit: contain;" />
-                </button>
+            <div class="container-fluid">
+                <!-- Links: Nur der Toggle-Button im Menü-Style -->
+                <div class="navbar-nav left-menu">
+                    <!-- Logo in Button einbetten,linkes Menü -->
+                    <div class="nav-item">
+                        <button class="logo-btn" onclick="window.location.href='@Url.Action("Index", "Home", new { area = "" })'">
+                            <img src="~/images/JobtasticBannerNEW.png" alt="Jobtastic Logo" style="max-height: 45px; max-width: 100%; object-fit: contain;" />
+                        </button>
+                    </div>
+                    <!-- Fluid-Effekt Toggle-Button -->
+                    <div class="nav-item">
+                        <button id="toggleFluidEffect" class="fluid-toggle-btn" aria-label="Flüssigkeitseffekt umschalten">
+                            <i class="fas fa-water"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- rechter Bereich -->
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-end mb-3">
-                    @* <ul class="navbar-nav">
-                        <!-- Navbar-Links hier -->
-                    </ul> *@
                     <partial name="_LoginPartial" />
                 </div>
             </div>
@@ -114,7 +122,6 @@
             // Check if the screen width is greater than 960px
             if (screen.width > 960) {
                 // Dynamically add the fluid animation script to the
-
                 const head = document.getElementsByTagName('head')[0];
                 const script = document.createElement('script');
                 script.type = 'text/javascript';
@@ -143,6 +150,47 @@
 
         // Load the function when the DOM is fully loaded
         document.addEventListener('DOMContentLoaded', loadFluidScript);
+    </script>
+
+    <script type="text/javascript">
+        document.addEventListener('DOMContentLoaded', function() {
+            // Fluid-Status aus dem localStorage abrufen (falls vorhanden)
+            const fluidEnabled = localStorage.getItem('fluidEnabled') !== 'false'; // Default: true
+
+            // Toggle-Button finden
+            const toggleBtn = document.getElementById('toggleFluidEffect');
+            const fluidCanvas = document.getElementById('fluidCanvas');
+            const fluidBackground = document.querySelector('.fluid-background');
+
+            // Initialen Status setzen
+            updateFluidState(fluidEnabled);
+
+            // Event-Listener für den Toggle-Button
+            toggleBtn.addEventListener('click', function() {
+                // Status umschalten
+                const newState = fluidBackground.style.display !== 'none';
+                updateFluidState(!newState);
+
+                // Status im localStorage speichern
+                localStorage.setItem('fluidEnabled', !newState);
+            });
+
+            // Funktion zum Aktualisieren des visuellen Status
+            function updateFluidState(enabled) {
+                if (enabled) {
+                    // Fluid-Effekt aktivieren
+                    fluidBackground.style.display = '';
+                    toggleBtn.classList.add('active');
+                    toggleBtn.setAttribute('title', 'Flüssigkeitseffekt deaktivieren');
+                    loadFluidScript(); // Bestehendes Script neu laden
+                } else {
+                    // Fluid-Effekt deaktivieren
+                    fluidBackground.style.display = 'none';
+                    toggleBtn.classList.remove('active');
+                    toggleBtn.setAttribute('title', 'Flüssigkeitseffekt aktivieren');
+                }
+            }
+        });
     </script>
 </body>
 </html>

@@ -12,76 +12,76 @@
         <h4 style="color: #0195ED">Finde deinen Traumjob oder die perfekten Kandidaten für dein Unternehmen</h4>
     </div>
 
-<section class="mt-4 p-4 bg-light rounded shadow">
-    <h2 class="mb-4 text-center">Aktuelle Jobangebote</h2>
+    <section class="mt-4 p-4 bg-light rounded shadow">
+        <h2 class="mb-4 text-center">Aktuelle Jobangebote</h2>
 
-    @if (Model != null && Model.Any())
-    {
-        <div class="table-responsive">
-            <table id="jobsTable" class="table table-striped table-hover">
-                <thead>
-                    <tr>
-                        <th>Unternehmen</th>
-                        <th>Jobtitel</th>
-                        <th>Standort</th>
-                        <th>Gehalt</th>
-                        <th>Start</th>
-                        <th>Erstellt am</th>
-                        <th>Aktionen</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var job in Model)
-                    {
+        @if (Model != null && Model.Any())
+        {
+            <div class="table-responsive">
+                <table id="jobsTable" class="table table-striped table-hover">
+                    <thead>
                         <tr>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    @if (job.CompanyImage != null && job.CompanyImage.Length > 0)
-                                    {
-                                        var base64 = Convert.ToBase64String(job.CompanyImage);
-                                        <img src="data:image/png;base64,@base64" alt="@job.CompanyName Logo" class="me-2" style="max-width: 40px; max-height: 30px;">
-                                    }
-                                    @job.CompanyName
-                                </div>
-                            </td>
-                            <td>@job.JobTitle</td>
-                            <td>@job.JobLocation</td>
-                            <td data-order="@job.Salary">
-                                @if (job.Salary > 0)
-                                {
-                                    @(job.Salary.ToString("N0") + " €")
-                                }
-                                else
-                                {
-                                    <span>Nach Vereinbarung</span>
-                                }
-                            </td>
-                            <td data-order="@job.StartDate.ToString("yyyy-MM-dd")">@job.StartDate.ToShortDateString()</td>
-                            <td data-order="@(job.CreationDate?.ToString("yyyy-MM-dd") ?? "")">
-                                @if (job.CreationDate.HasValue)
-                                {
-                                    @job.CreationDate.Value.ToShortDateString()
-                                }
-                            </td>
-                            <td>
-                                <button type="button" class="btn btn-primary btn-sm"
-                                        onclick="showJobDetails(@job.Id, '@job.JobTitle.Replace("'", "\\'")','@job.CompanyName.Replace("'", "\\'")')">
-                                    Details
-                                </button>
-                            </td>
+                            <th>Unternehmen</th>
+                            <th>Jobtitel</th>
+                            <th>Standort</th>
+                            <th>Gehalt</th>
+                            <th>Start</th>
+                            <th>Erstellt am</th>
+                            <th>Aktionen</th>
                         </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-    }
-    else
-    {
-        <div class="alert alert-info text-center">
-            <p>Zurzeit sind keine Jobangebote verfügbar.</p>
-        </div>
-    }
-</section>
+                    </thead>
+                    <tbody>
+                        @foreach (var job in Model)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        @if (job.CompanyImage != null && job.CompanyImage.Length > 0)
+                                        {
+                                            var base64 = Convert.ToBase64String(job.CompanyImage);
+                                            <img src="data:image/png;base64,@base64" alt="@job.CompanyName Logo" class="me-2" style="max-width: 40px; max-height: 30px;">
+                                        }
+                                        @job.CompanyName
+                                    </div>
+                                </td>
+                                <td>@job.JobTitle</td>
+                                <td>@job.JobLocation</td>
+                                <td data-order="@job.Salary">
+                                    @if (job.Salary > 0)
+                                    {
+                                        @(job.Salary.ToString("N0") + " €")
+                                    }
+                                    else
+                                    {
+                                        <span>Nach Vereinbarung</span>
+                                    }
+                                </td>
+                                <td data-order="@job.StartDate.ToString("yyyy-MM-dd")">@job.StartDate.ToShortDateString()</td>
+                                <td data-order="@(job.CreationDate?.ToString("yyyy-MM-dd") ?? "")">
+                                    @if (job.CreationDate.HasValue)
+                                    {
+                                        @job.CreationDate.Value.ToShortDateString()
+                                    }
+                                </td>
+                                <td>
+                                    <button type="button" class="btn btn-primary btn-sm"
+                                            onclick="showJobDetails(@job.Id, '@job.JobTitle.Replace("'", "\\'")','@job.CompanyName.Replace("'", "\\'")')">
+                                        Details
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-info text-center">
+                <p>Zurzeit sind keine Jobangebote verfügbar.</p>
+            </div>
+        }
+    </section>
 </section>
 @section Scripts {
     <script>
@@ -197,19 +197,20 @@
         }
 
         /**
-         * Zeigt Jobdetails mit optimierter Modal-Anzeige
-         * @@param {number} id - Job-ID
-         * @@param {string} title - Jobtitel
-         * @@param {string} company - Unternehmensname
+         * Zeigt Jobdetails mit völlig überarbeiteter Modal-Logik
+         * param {number} id - Job-ID
+         * param {string} title - Jobtitel
+         * param {string} company - Unternehmensname
          */
         async function showJobDetails(id, title, company) {
             try {
-                // Job-Details laden mit Ladeindikator
-                Swal.fire({
+                // Loading-Dialog mit komplett separater Instanz
+                const loadingAlert = Swal.fire({
                     title: 'Laden...',
                     text: 'Jobdetails werden geladen',
                     allowOutsideClick: false,
-                    didOpen: () => {
+                    showConfirmButton: false,
+                    willOpen: () => {
                         Swal.showLoading();
                     }
                 });
@@ -217,7 +218,10 @@
                 // Job-Details laden
                 const job = await fetchJobDetails(id);
 
-                // HTML generieren und Modal anzeigen
+                // Loading-Dialog schließen - wichtig!
+                loadingAlert.close();
+
+                // Hauptdialog
                 Swal.fire({
                     title: `${title} bei ${company}`,
                     html: generateJobDetailHTML(job),
@@ -226,34 +230,42 @@
                     showCancelButton: true,
                     cancelButtonText: 'Schließen',
                     confirmButtonText: 'Jetzt bewerben!',
-                    didRender: () => {
-                        // Bewerbungs-Logik
-                        Swal.getConfirmButton().addEventListener('click', () => {
-                            if (job.contactEmail) {
-                                // Verbesserter Mailto-Link
-                                const mailtoLink = `mailto:${job.contactEmail}?subject=${encodeURIComponent(`Bewerbung für ${title}`)}&body=${encodeURIComponent(`Sehr geehrte Damen und Herren,\n\nIch interessiere mich für die ausgeschriebene Stelle "${title}".\n\nMit freundlichen Grüßen,\n`)}`;
 
-                                window.location.href = mailtoLink;
-                            } else {
-                                Swal.fire({
-                                    icon: 'info',
-                                    title: 'Kontakt nicht verfügbar',
-                                    text: 'Leider sind keine Kontaktinformationen hinterlegt.'
-                                });
-                            }
-                        });
+                    preConfirm: () => {
+                        if (!job.contactEmail) {
+                            Swal.showValidationMessage('Keine Kontaktinformationen verfügbar');
+                            return false;
+                        }
+                        return true;
+                    }
+                }).then((result) => {
+
+                    if (result.isConfirmed && job.contactEmail) {
+                        // E-Mail-Aktion erst ausführen, nachdem Modal vollständig geschlossen wurde
+                        const mailtoLink = `mailto:${job.contactEmail}?subject=${encodeURIComponent(`Bewerbung für ${title}`)}&body=${encodeURIComponent(`Sehr geehrte Damen und Herren,\n\nIch interessiere mich für die ausgeschriebene Stelle "${title}".\n\nMit freundlichen Grüßen,\n`)}`;
+
+                        window.open(mailtoLink, '_blank');
                     }
                 });
 
             } catch (error) {
                 console.error('Fehler bei Jobdetails:', error);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Fehler',
-                    text: 'Die Jobdetails konnten nicht geladen werden.'
-                });
+                // Stelle sicher, dass alle vorherigen Alerts geschlossen sind
+                Swal.close();
+
+                // Zeige Fehlermeldung in separatem Alert
+                setTimeout(() => {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Fehler',
+                        text: 'Die Jobdetails konnten nicht geladen werden.'
+                    });
+                }, 100);
             }
         }
+         
+
+        
 
         // DataTable initialisieren mit erweiterten Performanz-Optimierungen
         $(document).ready(function() {
