@@ -1,5 +1,6 @@
 ﻿using ASPnet_Jobtastic.Data;
 using ASPnet_Jobtastic.Models;
+using ASPnet_Jobtastic.Filters;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -11,7 +12,7 @@ namespace ASPnet_Jobtastic.Controllers
     
     [Route("api/jobposting")]
     [ApiController]
-
+    
     public class ApiJobPostingController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
@@ -27,7 +28,7 @@ namespace ASPnet_Jobtastic.Controllers
             var allJobPostings = _context.JobPostings.ToList();
             return Ok(allJobPostings);
         }
-
+        [ApiKeyAuthorization]
         [HttpGet("GetById")]
         public IActionResult GetById(int id)
         {
@@ -40,7 +41,7 @@ namespace ASPnet_Jobtastic.Controllers
             }
             return Ok(getJobPostingById);
         }
-
+        [ApiKeyAuthorization]
         [HttpPost("Create")]
         public IActionResult Create(JobPostingModel jobPostingModel)
         {
@@ -52,7 +53,7 @@ namespace ASPnet_Jobtastic.Controllers
             _context.SaveChanges();
             return Ok();
         }
-
+        [ApiKeyAuthorization]
         [HttpDelete("Delete")]
         public IActionResult Delete(int id)
         {
@@ -67,7 +68,7 @@ namespace ASPnet_Jobtastic.Controllers
 
             return Ok("Objekt wurde gelöscht");
         }
-
+        [ApiKeyAuthorization]
         [HttpPut("Update")]
         public IActionResult Update(JobPostingModel jobPostingModel)
         {
